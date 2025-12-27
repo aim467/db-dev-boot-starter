@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Dev - Database Development Assistant</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus@2.5.6/dist/index.css">
+    <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/element-plus@2.5.6/dist/index.full.js"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+    <script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #app {
+            height: 100%;
+        }
+
+        .app-container {
+            height: 100%;
+        }
+
+        .el-aside {
+            background: #304156;
+            color: #fff;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #263445;
+            border-bottom: 1px solid #1f2d3d;
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #bfcbd9;
+            margin-top: 5px;
+        }
+
+        .el-menu {
+            border-right: none;
+        }
+
+        .content-body {
+            padding: 20px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            background: #f0f2f5;
+        }
+
+        .welcome-card {
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            margin-top: 15px;
+            line-height: 2;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #303133;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container class="app-container">
+        <!-- 侧边栏 -->
+        <el-aside width="240px">
+            <div class="sidebar-header">
+                <h1>
+                    <el-icon><Database /></el-icon>
+                    DB Dev
+                </h1>
+                <p>Database Development Assistant</p>
+            </div>
+            <el-menu
+                :default-active="currentView"
+                background-color="#304156"
+                text-color="#bfcbd9"
+                active-text-color="#409eff"
+                @select="handleMenuSelect">
+                <el-menu-item v-for="item in menuItems" :key="item.key" :index="item.key">
+                    <el-icon><component :is="item.icon" /></el-icon>
+                    <span>{{ item.label }}</span>
+                </el-menu-item>
+            </el-menu>
+        </el-aside>
+
+        <!-- 主内容区 -->
+        <el-container>
+            <el-header height="60px" style="background: #fff; border-bottom: 1px solid #e4e7ed; display: flex; align-items: center; padding: 0 20px;">
+                <h2 style="font-size: 20px; font-weight: 600; color: #303133;">{{ currentViewTitle }}</h2>
+            </el-header>
+            <el-main class="content-body">
+                <!-- Dashboard -->
+                <div v-if="currentView === 'dashboard'">
+                    <el-card class="welcome-card" shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon color="#409eff"><Promotion /></el-icon>
+                                <span style="font-weight: 600;">欢迎使用 DB Dev</span>
+                            </div>
+                        </template>
+                        <p style="margin-bottom: 15px;">这是一个面向开发者的数据库开发辅助工具，提供以下功能：</p>
+                        <ul class="feature-list">
+                            <li><el-icon color="#67c23a"><Connection /></el-icon> 数据源管理与监控</li>
+                            <li><el-icon color="#409eff"><Folder /></el-icon> 数据库元数据浏览</li>
+                            <li><el-icon color="#e6a23c"><Lightning /></el-icon> SQL 执行与调试（即将推出）</li>
+                            <li><el-icon color="#f56c6c"><Tools /></el-icon> 代码生成工具（即将推出）</li>
+                        </ul>
+                    </el-card>
+                    <el-card shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon color="#67c23a"><Guide /></el-icon>
+                                <span style="font-weight: 600;">快速开始</span>
+                            </div>
+                        </template>
+                        <el-alert
+                            title="点击左侧菜单开始探索您的数据库"
+                            type="info"
+                            :closable="false"
+                            show-icon>
+                        </el-alert>
+                    </el-card>
+                </div>
+
+                <!-- 数据源列表 -->
+                <div v-if="currentView === 'datasources'">
+                    <el-card shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon><Connection /></el-icon>
+                                    <span style="font-weight: 600;">数据源列表</span>
+                                </div>
+                                <el-button type="primary" size="small" @click="loadDataSources" :loading="loading">
+                                    <el-icon><Refresh /></el-icon>
+                                    刷新
+                                </el-button>
+                            </div>
+                        </template>
+                        <div v-loading="loading">
+                            <el-empty v-if="!loading && dataSources.length === 0" description="未找到数据源" />
+                            <el-table v-else :data="dataSources" stripe style="width: 100%">
+                                <el-table-column prop="name" label="名称" width="200">
+                                    <template #default="scope">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <el-icon v-if="scope.row.primary" color="#f56c6c"><Star /></el-icon>
+                                            <strong>{{ scope.row.name }}</strong>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="databaseType" label="数据库类型" width="150">
+                                    <template #default="scope">
+                                        <el-tag type="info" size="small">{{ scope.row.databaseType }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="type" label="连接池类型" width="180" />
+                                <el-table-column prop="url" label="URL" min-width="300">
+                                    <template #default="scope">
+                                        <el-text type="info" size="small" style="font-family: monospace;">{{ scope.row.url }}</el-text>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="username" label="用户名" width="120" />
+                                <el-table-column label="状态" width="100">
+                                    <template #default>
+                                        <el-tag type="success" size="small">
+                                            <el-icon><CircleCheck /></el-icon>
+                                            已连接
+                                        </el-tag>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-card>
+                </div>
+
+                <!-- 表结构浏览 -->
+                <div v-if="currentView === 'tables'">
+                    <el-card shadow="hover" style="margin-bottom: 20px;">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon><Setting /></el-icon>
+                                <span style="font-weight: 600;">数据源选择</span>
+                            </div>
+                        </template>
+                        <el-select
+                            v-model="selectedDataSource"
+                            placeholder="请选择数据源"
+                            style="width: 300px;"
+                            @change="loadTables">
+                            <el-option
+                                v-for="ds in dataSources"
+                                :key="ds.name"
+                                :label="ds.name"
+                                :value="ds.name">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon v-if="ds.primary" color="#f56c6c"><Star /></el-icon>
+                                    <span>{{ ds.name }}</span>
+                                    <el-tag size="small" type="info">{{ ds.databaseType }}</el-tag>
+                                </div>
+                            </el-option>
+                        </el-select>
+                    </el-card>
+
+                    <el-card v-if="selectedDataSource" shadow="hover" style="margin-bottom: 20px;">
+                        <template #header>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon><Folder /></el-icon>
+                                    <span style="font-weight: 600;">表列表</span>
+                                </div>
+                                <el-input
+                                    v-model="tableSearch"
+                                    placeholder="搜索表名"
+                                    style="width: 200px;"
+                                    clearable>
+                                    <template #prefix>
+                                        <el-icon><Search /></el-icon>
+                                    </template>
+                                </el-input>
+                            </div>
+                        </template>
+                        <div v-loading="loadingTables">
+                            <el-empty v-if="!loadingTables && filteredTables.length === 0" description="未找到表" />
+                            <el-table v-else :data="filteredTables" stripe style="width: 100%">
+                                <el-table-column prop="tableName" label="表名" min-width="200">
+                                    <template #default="scope">
+                                        <strong>{{ scope.row.tableName }}</strong>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="tableType" label="类型" width="120">
+                                    <template #default="scope">
+                                        <el-tag size="small">{{ scope.row.tableType }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="remarks" label="备注" min-width="200">
+                                    <template #default="scope">
+                                        {{ scope.row.remarks || '-' }}
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="操作" width="120">
+                                    <template #default="scope">
+                                        <el-button type="primary" size="small" @click="viewTableDetail(scope.row.tableName)">
+                                            <el-icon><View /></el-icon>
+                                            查看
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </el-card>
+
+                    <!-- 表详情 -->
+                    <el-card v-if="selectedTable" shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon><Document /></el-icon>
+                                    <span style="font-weight: 600;">表详情: {{ selectedTable.tableName }}</span>
+                                </div>
+                                <el-button size="small" @click="selectedTable = null">
+                                    <el-icon><Close /></el-icon>
+                                    关闭
+                                </el-button>
+                            </div>
+                        </template>
+
+                        <el-tabs>
+                            <el-tab-pane label="字段信息">
+                                <template #label>
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <el-icon><List /></el-icon>
+                                        字段信息
+                                    </span>
+                                </template>
+                                <el-table :data="selectedTable.columns" stripe border style="width: 100%">
+                                    <el-table-column prop="columnName" label="字段名" width="180">
+                                        <template #default="scope">
+                                            <strong>{{ scope.row.columnName }}</strong>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="typeName" label="类型" width="120" />
+                                    <el-table-column prop="columnSize" label="大小" width="80" />
+                                    <el-table-column label="可空" width="80">
+                                        <template #default="scope">
+                                            <el-tag :type="scope.row.nullable ? 'info' : 'warning'" size="small">
+                                                {{ scope.row.nullable ? '是' : '否' }}
+                                            </el-tag>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="columnDef" label="默认值" width="120">
+                                        <template #default="scope">
+                                            {{ scope.row.columnDef || '-' }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="remarks" label="备注" min-width="200">
+                                        <template #default="scope">
+                                            {{ scope.row.remarks || '-' }}
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </el-tab-pane>
+
+                            <el-tab-pane label="索引信息">
+                                <template #label>
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <el-icon><Key /></el-icon>
+                                        索引信息
+                                    </span>
+                                </template>
+                                <el-empty v-if="!selectedTable.indexes || selectedTable.indexes.length === 0" description="无索引信息" />
+                                <el-table v-else :data="selectedTable.indexes" stripe border style="width: 100%">
+                                    <el-table-column prop="indexName" label="索引名" width="200" />
+                                    <el-table-column prop="columnName" label="列名" width="180" />
+                                    <el-table-column label="唯一" width="100">
+                                        <template #default="scope">
+                                            <el-tag :type="scope.row.nonUnique ? 'info' : 'success'" size="small">
+                                                {{ scope.row.nonUnique ? '否' : '是' }}
+                                            </el-tag>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="type" label="类型" min-width="150" />
+                                </el-table>
+                            </el-tab-pane>
+                        </el-tabs>
+                    </el-card>
+                </div>
+
+                <!-- SQL 执行器 -->
+                <div v-if="currentView === 'sql'">
+                    <el-card shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon><Lightning /></el-icon>
+                                <span style="font-weight: 600;">SQL 执行器</span>
+                            </div>
+                        </template>
+                        <el-alert
+                            title="此功能即将推出"
+                            type="info"
+                            description="敬请期待..."
+                            :closable="false"
+                            show-icon>
+                        </el-alert>
+                    </el-card>
+                </div>
+
+                <!-- 代码生成 -->
+                <div v-if="currentView === 'codegen'">
+                    <el-card shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon><Tools /></el-icon>
+                                <span style="font-weight: 600;">代码生成</span>
+                            </div>
+                        </template>
+                        <el-alert
+                            title="此功能即将推出"
+                            type="info"
+                            description="敬请期待..."
+                            :closable="false"
+                            show-icon>
+                        </el-alert>
+                    </el-card>
+                </div>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+
+<script>
+    const {createApp} = Vue;
+    // const ElementPlusIconsVue = window.ElementPlusIconsVue;
+
+    const app = createApp({
+        data() {
+            return {
+                currentView: 'dashboard',
+                menuItems: [
+                    {key: 'dashboard', label: 'Dashboard', icon: 'HomeFilled'},
+                    {key: 'datasources', label: '数据源', icon: 'Connection'},
+                    {key: 'tables', label: '表结构', icon: 'Folder'},
+                    {key: 'sql', label: 'SQL 执行器', icon: 'Lightning'},
+                    {key: 'codegen', label: '代码生成', icon: 'Tools'}
+                ],
+                dataSources: [],
+                tables: [],
+                tableSearch: '',
+                selectedDataSource: '',
+                selectedTable: null,
+                loading: false,
+                loadingTables: false
+            };
+        },
+        computed: {
+            currentViewTitle() {
+                const item = this.menuItems.find(m => m.key === this.currentView);
+                return item ? item.label : '';
+            },
+            filteredTables() {
+                if (!this.tableSearch) return this.tables;
+                const search = this.tableSearch.toLowerCase();
+                return this.tables.filter(t => t.tableName.toLowerCase().includes(search));
+            }
+        },
+        methods: {
+            handleMenuSelect(key) {
+                this.currentView = key;
+                if (key === 'datasources' && this.dataSources.length === 0) {
+                    this.loadDataSources();
+                }
+                if (key === 'tables' && this.dataSources.length === 0) {
+                    this.loadDataSources();
+                }
+            },
+            async loadDataSources() {
+                this.loading = true;
+                try {
+                    const response = await axios.get('./api/datasource/list');
+                    console.log('Data sources response:', response.data);
+                    if (response.data.code === 200) {
+                        this.dataSources = response.data.data;
+                    } else {
+                        this.$message.error('加载数据源失败: ' + response.data.message);
+                    }
+                } catch (error) {
+                    console.error('Failed to load data sources:', error);
+                    this.$message.error('加载数据源失败: ' + error.message);
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async loadTables() {
+                if (!this.selectedDataSource) return;
+
+                this.loadingTables = true;
+                this.selectedTable = null;
+                this.tableSearch = '';
+                try {
+                    const response = await axios.get('./api/metadata/tables', {
+                        params: {dataSourceName: this.selectedDataSource}
+                    });
+                    console.log('Tables response:', response.data);
+                    if (response.data.code === 200) {
+                        this.tables = response.data.data;
+                        this.$message.success(`加载了 ${this.tables.length} 个表`);
+                    } else {
+                        this.$message.error('加载表列表失败: ' + response.data.message);
+                    }
+                } catch (error) {
+                    console.error('Failed to load tables:', error);
+                    this.$message.error('加载表列表失败: ' + error.message);
+                } finally {
+                    this.loadingTables = false;
+                }
+            },
+            async viewTableDetail(tableName) {
+                const loading = this.$loading({
+                    lock: true,
+                    text: '加载表详情...',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                try {
+                    const response = await axios.get(`./api/metadata/table/${tableName}`, {
+                        params: {dataSourceName: this.selectedDataSource}
+                    });
+                    console.log('Table detail response:', response.data);
+                    if (response.data.code === 200) {
+                        this.selectedTable = response.data.data;
+                        this.$message.success('加载表详情成功');
+                    } else {
+                        this.$message.error('加载表详情失败: ' + response.data.message);
+                    }
+                } catch (error) {
+                    console.error('Failed to load table detail:', error);
+                    this.$message.error('加载表详情失败: ' + error.message);
+                } finally {
+                    loading.close();
+                }
+            }
+        },
+        mounted() {
+            console.log('DB Dev UI initialized with Element Plus');
+        }
+    });
+
+    // 注册所有 Element Plus 图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+        app.component(key, component);
+    }
+
+    app.use(ElementPlus);
+    app.mount('#app');
+</script>
+</body>
+</html>
