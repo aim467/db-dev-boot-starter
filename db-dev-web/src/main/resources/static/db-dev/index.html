@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DB Dev - Database Development Assistant</title>
-    <link rel="stylesheet" href="https://unpkg.com/element-plus@2.5.6/dist/index.css">
-    <script src="https://unpkg.com/vue@3.4.21/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/element-plus@2.5.6/dist/index.full.js"></script>
-    <script src="https://unpkg.com/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
-    <script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+    
+    <!-- 使用更现代的CDN和版本 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus@2.8.2/dist/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.26/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/element-plus@2.8.2/dist/index.full.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@element-plus/icons-vue@2.3.1/dist/index.iife.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.8/dist/axios.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -19,6 +22,7 @@
         html, body {
             height: 100%;
             overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
         }
 
         #app {
@@ -30,13 +34,14 @@
         }
 
         .el-aside {
-            background: #304156;
+            background: linear-gradient(180deg, #304156 0%, #2c3e50 100%);
             color: #fff;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar-header {
             padding: 20px;
-            background: #263445;
+            background: linear-gradient(135deg, #263445 0%, #1f2d3d 100%);
             border-bottom: 1px solid #1f2d3d;
         }
 
@@ -57,32 +62,73 @@
 
         .el-menu {
             border-right: none;
+            background-color: transparent;
+        }
+
+        .el-menu-item {
+            transition: all 0.3s ease;
+            margin: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .el-menu-item:hover {
+            background-color: rgba(64, 158, 255, 0.1) !important;
+        }
+
+        .el-menu-item.is-active {
+            background-color: rgba(64, 158, 255, 0.2) !important;
+            color: #409eff !important;
         }
 
         .content-body {
             padding: 20px;
             height: calc(100vh - 60px);
             overflow-y: auto;
-            background: #f0f2f5;
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
         }
 
         .welcome-card {
             margin-bottom: 20px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .welcome-card .el-card__header {
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .feature-list {
             margin-top: 15px;
             line-height: 2;
+            list-style: none;
         }
 
         .feature-list li {
             display: flex;
             align-items: center;
             gap: 8px;
+            padding: 8px 0;
+            transition: transform 0.2s ease;
         }
 
-        .table-section {
-            margin-top: 20px;
+        .feature-list li:hover {
+            transform: translateX(5px);
+        }
+
+        .el-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .el-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
         }
 
         .section-title {
@@ -90,6 +136,151 @@
             font-weight: 600;
             margin-bottom: 12px;
             color: #303133;
+        }
+
+        /* 表格优化 */
+        .el-table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .el-table .el-table__header-wrapper th {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            font-weight: 600;
+            color: #606266;
+        }
+
+        /* 按钮优化 */
+        .el-button {
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .el-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+        }
+
+        /* 标签优化 */
+        .el-tag {
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* 输入框优化 */
+        .el-input__inner {
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .el-input__inner:focus {
+            border-color: #409eff;
+            box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+
+        /* 加载动画优化 */
+        .el-loading-mask {
+            border-radius: 12px;
+        }
+
+        /* 空状态优化 */
+        .el-empty {
+            padding: 40px 0;
+        }
+
+        .el-empty__description {
+            color: #909399;
+            font-size: 14px;
+        }
+
+        /* 头部优化 */
+        .el-header {
+            background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%);
+            border-bottom: 1px solid #e4e7ed;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .el-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #303133;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 768px) {
+            .el-aside {
+                width: 200px !important;
+            }
+            
+            .content-body {
+                padding: 15px;
+            }
+            
+            .el-header {
+                padding: 0 15px;
+            }
+        }
+
+        /* 滚动条优化 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* 卡片标题图标动画 */
+        .el-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .el-card:hover .el-icon {
+            transform: scale(1.1);
+        }
+
+        /* 状态徽章 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #f0f9ff;
+            color: #0ea5e9;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .status-badge.error {
+            background: #fee2e2;
+            color: #ef4444;
         }
     </style>
 </head>
@@ -107,7 +298,7 @@
             </div>
             <el-menu
                 :default-active="currentView"
-                background-color="#304156"
+                background-color="transparent"
                 text-color="#bfcbd9"
                 active-text-color="#409eff"
                 @select="handleMenuSelect">
@@ -120,8 +311,20 @@
 
         <!-- 主内容区 -->
         <el-container>
-            <el-header height="60px" style="background: #fff; border-bottom: 1px solid #e4e7ed; display: flex; align-items: center; padding: 0 20px;">
-                <h2 style="font-size: 20px; font-weight: 600; color: #303133;">{{ currentViewTitle }}</h2>
+            <el-header height="60px">
+                <h2>{{ currentViewTitle }}</h2>
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                    <el-tooltip content="刷新页面" placement="bottom">
+                        <el-button circle size="small" @click="refreshCurrentView">
+                            <el-icon><Refresh /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                    <el-tooltip content="系统设置" placement="bottom">
+                        <el-button circle size="small">
+                            <el-icon><Setting /></el-icon>
+                        </el-button>
+                    </el-tooltip>
+                </div>
             </el-header>
             <el-main class="content-body">
                 <!-- Dashboard -->
@@ -129,11 +332,11 @@
                     <el-card class="welcome-card" shadow="hover">
                         <template #header>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <el-icon color="#409eff"><Promotion /></el-icon>
+                                <el-icon color="#fff"><Promotion /></el-icon>
                                 <span style="font-weight: 600;">欢迎使用 DB Dev</span>
                             </div>
                         </template>
-                        <p style="margin-bottom: 15px;">这是一个面向开发者的数据库开发辅助工具，提供以下功能：</p>
+                        <p style="margin-bottom: 15px; color: rgba(255,255,255,0.9);">这是一个面向开发者的数据库开发辅助工具，提供以下功能：</p>
                         <ul class="feature-list">
                             <li><el-icon color="#67c23a"><Connection /></el-icon> 数据源管理与监控</li>
                             <li><el-icon color="#409eff"><Folder /></el-icon> 数据库元数据浏览</li>
@@ -141,20 +344,39 @@
                             <li><el-icon color="#f56c6c"><Tools /></el-icon> 代码生成工具（即将推出）</li>
                         </ul>
                     </el-card>
-                    <el-card shadow="hover">
-                        <template #header>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <el-icon color="#67c23a"><Guide /></el-icon>
-                                <span style="font-weight: 600;">快速开始</span>
-                            </div>
-                        </template>
-                        <el-alert
-                            title="点击左侧菜单开始探索您的数据库"
-                            type="info"
-                            :closable="false"
-                            show-icon>
-                        </el-alert>
-                    </el-card>
+                    
+                    <el-row :gutter="20">
+                        <el-col :span="12">
+                            <el-card shadow="hover">
+                                <template #header>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <el-icon color="#67c23a"><Guide /></el-icon>
+                                        <span style="font-weight: 600;">快速开始</span>
+                                    </div>
+                                </template>
+                                <el-alert
+                                    title="点击左侧菜单开始探索您的数据库"
+                                    type="info"
+                                    :closable="false"
+                                    show-icon>
+                                </el-alert>
+                            </el-card>
+                        </el-col>
+                        <el-col :span="12">
+                            <el-card shadow="hover">
+                                <template #header>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <el-icon color="#409eff"><InfoFilled /></el-icon>
+                                        <span style="font-weight: 600;">系统信息</span>
+                                    </div>
+                                </template>
+                                <div style="line-height: 2;">
+                                    <p><el-icon size="14"><Clock /></el-icon> 版本: 1.0.0</p>
+                                    <p><el-icon size="14"><User /></el-icon> 用户: Developer</p>
+                                </div>
+                            </el-card>
+                        </el-col>
+                    </el-row>
                 </div>
 
                 <!-- 数据源列表 -->
@@ -165,17 +387,26 @@
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <el-icon><Connection /></el-icon>
                                     <span style="font-weight: 600;">数据源列表</span>
+                                    <el-tag v-if="dataSources.length > 0" type="info" size="small">{{ dataSources.length }}</el-tag>
                                 </div>
-                                <el-button type="primary" size="small" @click="loadDataSources" :loading="loading">
-                                    <el-icon><Refresh /></el-icon>
-                                    刷新
-                                </el-button>
+                                <div style="display: flex; gap: 8px;">
+                                    <el-button type="primary" size="small" @click="loadDataSources" :loading="loading">
+                                        <el-icon><Refresh /></el-icon>
+                                        刷新
+                                    </el-button>
+                                    <el-button type="success" size="small" @click="testAllConnections">
+                                        <el-icon><Link /></el-icon>
+                                        测试连接
+                                    </el-button>
+                                </div>
                             </div>
                         </template>
                         <div v-loading="loading">
-                            <el-empty v-if="!loading && dataSources.length === 0" description="未找到数据源" />
-                            <el-table v-else :data="dataSources" stripe style="width: 100%">
-                                <el-table-column prop="name" label="名称" width="200">
+                            <el-empty v-if="!loading && dataSources.length === 0" description="未找到数据源" image="/api/empty-state">
+                                <el-button type="primary" size="small">添加数据源</el-button>
+                            </el-empty>
+                            <el-table v-else :data="dataSources" stripe style="width: 100%" height="500">
+                                <el-table-column prop="name" label="名称" width="200" fixed>
                                     <template #default="scope">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <el-icon v-if="scope.row.primary" color="#f56c6c"><Star /></el-icon>
@@ -185,22 +416,39 @@
                                 </el-table-column>
                                 <el-table-column prop="databaseType" label="数据库类型" width="150">
                                     <template #default="scope">
-                                        <el-tag type="info" size="small">{{ scope.row.databaseType }}</el-tag>
+                                        <el-tag :type="getDatabaseTypeColor(scope.row.databaseType)" size="small">
+                                            {{ scope.row.databaseType }}
+                                        </el-tag>
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="type" label="连接池类型" width="180" />
-                                <el-table-column prop="url" label="URL" min-width="300">
+                                <el-table-column prop="url" label="URL" min-width="300" show-overflow-tooltip>
                                     <template #default="scope">
                                         <el-text type="info" size="small" style="font-family: monospace;">{{ scope.row.url }}</el-text>
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="username" label="用户名" width="120" />
-                                <el-table-column label="状态" width="100">
-                                    <template #default>
-                                        <el-tag type="success" size="small">
+                                <el-table-column label="状态" width="120">
+                                    <template #default="scope">
+                                        <el-tag :type="scope.row.status || 'success'" size="small">
                                             <el-icon><CircleCheck /></el-icon>
-                                            已连接
+                                            {{ scope.row.status === 'error' ? '连接失败' : '已连接' }}
                                         </el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="操作" width="150" fixed="right">
+                                    <template #default="scope">
+                                        <el-button-group>
+                                            <el-button type="primary" size="small" @click="testConnection(scope.row)">
+                                                <el-icon><Link /></el-icon>
+                                            </el-button>
+                                            <el-button type="warning" size="small" @click="editDataSource(scope.row)">
+                                                <el-icon><Edit /></el-icon>
+                                            </el-button>
+                                            <el-button type="danger" size="small" @click="deleteDataSource(scope.row)">
+                                                <el-icon><Delete /></el-icon>
+                                            </el-button>
+                                        </el-button-group>
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -221,7 +469,8 @@
                             v-model="selectedDataSource"
                             placeholder="请选择数据源"
                             style="width: 300px;"
-                            @change="loadTables">
+                            @change="loadTables"
+                            clearable>
                             <el-option
                                 v-for="ds in dataSources"
                                 :key="ds.name"
@@ -230,7 +479,7 @@
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <el-icon v-if="ds.primary" color="#f56c6c"><Star /></el-icon>
                                     <span>{{ ds.name }}</span>
-                                    <el-tag size="small" type="info">{{ ds.databaseType }}</el-tag>
+                                    <el-tag size="small" :type="getDatabaseTypeColor(ds.databaseType)">{{ ds.databaseType }}</el-tag>
                                 </div>
                             </el-option>
                         </el-select>
@@ -242,41 +491,58 @@
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <el-icon><Folder /></el-icon>
                                     <span style="font-weight: 600;">表列表</span>
+                                    <el-tag v-if="tables.length > 0" type="info" size="small">{{ tables.length }}</el-tag>
                                 </div>
-                                <el-input
-                                    v-model="tableSearch"
-                                    placeholder="搜索表名"
-                                    style="width: 200px;"
-                                    clearable>
-                                    <template #prefix>
-                                        <el-icon><Search /></el-icon>
-                                    </template>
-                                </el-input>
+                                <div style="display: flex; gap: 8px;">
+                                    <el-input
+                                        v-model="tableSearch"
+                                        placeholder="搜索表名"
+                                        style="width: 200px;"
+                                        clearable>
+                                        <template #prefix>
+                                            <el-icon><Search /></el-icon>
+                                        </template>
+                                    </el-input>
+                                    <el-button type="primary" size="small" @click="loadTables" :loading="loadingTables">
+                                        <el-icon><Refresh /></el-icon>
+                                        刷新
+                                    </el-button>
+                                </div>
                             </div>
                         </template>
                         <div v-loading="loadingTables">
-                            <el-empty v-if="!loadingTables && filteredTables.length === 0" description="未找到表" />
-                            <el-table v-else :data="filteredTables" stripe style="width: 100%">
-                                <el-table-column prop="tableName" label="表名" min-width="200">
+                            <el-empty v-if="!loadingTables && filteredTables.length === 0" description="未找到表"></el-empty>
+                            <el-table v-else :data="filteredTables" stripe style="width: 100%" height="400">
+                                <el-table-column prop="tableName" label="表名" min-width="200" sortable>
                                     <template #default="scope">
-                                        <strong>{{ scope.row.tableName }}</strong>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <el-icon color="#409eff"><Document /></el-icon>
+                                            <strong>{{ scope.row.tableName }}</strong>
+                                        </div>
                                     </template>
                                 </el-table-column>
-                                <el-table-column prop="tableType" label="类型" width="120">
+                                <el-table-column prop="tableType" label="类型" width="120" sortable>
                                     <template #default="scope">
-                                        <el-tag size="small">{{ scope.row.tableType }}</el-tag>
+                                        <el-tag :type="scope.row.tableType === 'TABLE' ? 'success' : 'info'" size="small">
+                                            {{ scope.row.tableType }}
+                                        </el-tag>
                                     </template>
                                 </el-table-column>
-                                <el-table-column prop="remarks" label="备注" min-width="200">
+                                <el-table-column prop="remarks" label="备注" min-width="200" show-overflow-tooltip>
                                     <template #default="scope">
                                         {{ scope.row.remarks || '-' }}
                                     </template>
                                 </el-table-column>
-                                <el-table-column label="操作" width="120">
+                                <el-table-column prop="columnCount" label="字段数" width="100" sortable>
+                                    <template #default="scope">
+                                        <el-tag size="small">{{ scope.row.columnCount || 0 }}</el-tag>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="操作" width="150" fixed="right">
                                     <template #default="scope">
                                         <el-button type="primary" size="small" @click="viewTableDetail(scope.row.tableName)">
                                             <el-icon><View /></el-icon>
-                                            查看
+                                            详情
                                         </el-button>
                                     </template>
                                 </el-table-column>
@@ -291,31 +557,45 @@
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <el-icon><Document /></el-icon>
                                     <span style="font-weight: 600;">表详情: {{ selectedTable.tableName }}</span>
+                                    <el-tag type="info" size="small">{{ selectedTable.tableType }}</el-tag>
                                 </div>
-                                <el-button size="small" @click="selectedTable = null">
-                                    <el-icon><Close /></el-icon>
-                                    关闭
-                                </el-button>
+                                <div style="display: flex; gap: 8px;">
+                                    <el-button type="primary" size="small" @click="exportTableInfo">
+                                        <el-icon><Download /></el-icon>
+                                        导出
+                                    </el-button>
+                                    <el-button size="small" @click="selectedTable = null">
+                                        <el-icon><Close /></el-icon>
+                                        关闭
+                                    </el-button>
+                                </div>
                             </div>
                         </template>
 
-                        <el-tabs>
+                        <el-tabs type="border-card">
                             <el-tab-pane label="字段信息">
                                 <template #label>
                                     <span style="display: flex; align-items: center; gap: 4px;">
                                         <el-icon><List /></el-icon>
-                                        字段信息
+                                        字段信息 ({{ selectedTable.columns?.length || 0 }})
                                     </span>
                                 </template>
-                                <el-table :data="selectedTable.columns" stripe border style="width: 100%">
-                                    <el-table-column prop="columnName" label="字段名" width="180">
+                                <el-table :data="selectedTable.columns" stripe border style="width: 100%" height="400">
+                                    <el-table-column prop="columnName" label="字段名" width="180" fixed>
                                         <template #default="scope">
-                                            <strong>{{ scope.row.columnName }}</strong>
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <el-icon v-if="scope.row.primaryKey" color="#f56c6c" size="14"><Key /></el-icon>
+                                                <strong>{{ scope.row.columnName }}</strong>
+                                            </div>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="typeName" label="类型" width="120" />
-                                    <el-table-column prop="columnSize" label="大小" width="80" />
-                                    <el-table-column label="可空" width="80">
+                                    <el-table-column prop="typeName" label="类型" width="120" sortable />
+                                    <el-table-column prop="columnSize" label="大小" width="80" sortable>
+                                        <template #default="scope">
+                                            {{ scope.row.columnSize > 0 ? scope.row.columnSize : '-' }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="可空" width="80" sortable>
                                         <template #default="scope">
                                             <el-tag :type="scope.row.nullable ? 'info' : 'warning'" size="small">
                                                 {{ scope.row.nullable ? '是' : '否' }}
@@ -327,9 +607,15 @@
                                             {{ scope.row.columnDef || '-' }}
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="remarks" label="备注" min-width="200">
+                                    <el-table-column prop="remarks" label="备注" min-width="200" show-overflow-tooltip>
                                         <template #default="scope">
                                             {{ scope.row.remarks || '-' }}
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="自增" width="80">
+                                        <template #default="scope">
+                                            <el-tag v-if="scope.row.autoIncrement" type="success" size="small">是</el-tag>
+                                            <span v-else>-</span>
                                         </template>
                                     </el-table-column>
                                 </el-table>
@@ -339,10 +625,10 @@
                                 <template #label>
                                     <span style="display: flex; align-items: center; gap: 4px;">
                                         <el-icon><Key /></el-icon>
-                                        索引信息
+                                        索引信息 ({{ selectedTable.indexes?.length || 0 }})
                                     </span>
                                 </template>
-                                <el-empty v-if="!selectedTable.indexes || selectedTable.indexes.length === 0" description="无索引信息" />
+                                <el-empty v-if="!selectedTable.indexes || selectedTable.indexes.length === 0" description="无索引信息"></el-empty>
                                 <el-table v-else :data="selectedTable.indexes" stripe border style="width: 100%">
                                     <el-table-column prop="indexName" label="索引名" width="200" />
                                     <el-table-column prop="columnName" label="列名" width="180" />
@@ -354,7 +640,39 @@
                                         </template>
                                     </el-table-column>
                                     <el-table-column prop="type" label="类型" min-width="150" />
+                                    <el-table-column label="排序" width="100">
+                                        <template #default="scope">
+                                            {{ scope.row.ascOrDesc || 'ASC' }}
+                                        </template>
+                                    </el-table-column>
                                 </el-table>
+                            </el-tab-pane>
+
+                            <el-tab-pane label="SQL预览">
+                                <template #label>
+                                    <span style="display: flex; align-items: center; gap: 4px;">
+                                        <el-icon><DocumentCopy /></el-icon>
+                                        SQL预览
+                                    </span>
+                                </template>
+                                <el-card shadow="never">
+                                    <template #header>
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span>CREATE TABLE 语句</span>
+                                            <el-button type="primary" size="small" @click="copySql">
+                                                <el-icon><DocumentCopy /></el-icon>
+                                                复制
+                                            </el-button>
+                                        </div>
+                                    </template>
+                                    <el-input
+                                        type="textarea"
+                                        :rows="15"
+                                        v-model="generateCreateTableSql"
+                                        readonly
+                                        style="font-family: 'Courier New', monospace;"
+                                    ></el-input>
+                                </el-card>
                             </el-tab-pane>
                         </el-tabs>
                     </el-card>
@@ -372,10 +690,14 @@
                         <el-alert
                             title="此功能即将推出"
                             type="info"
-                            description="敬请期待..."
+                            description="SQL编辑器、语法高亮、执行计划分析等功能正在开发中..."
                             :closable="false"
                             show-icon>
                         </el-alert>
+                        <div style="margin-top: 20px; padding: 40px; text-align: center; color: #909399;">
+                            <el-icon size="48"><Clock /></el-icon>
+                            <p style="margin-top: 16px;">敬请期待</p>
+                        </div>
                     </el-card>
                 </div>
 
@@ -391,10 +713,14 @@
                         <el-alert
                             title="此功能即将推出"
                             type="info"
-                            description="敬请期待..."
+                            description="支持MyBatis、JPA、Spring Data JPA等多种框架的代码生成..."
                             :closable="false"
                             show-icon>
                         </el-alert>
+                        <div style="margin-top: 20px; padding: 40px; text-align: center; color: #909399;">
+                            <el-icon size="48"><Clock /></el-icon>
+                            <p style="margin-top: 16px;">敬请期待</p>
+                        </div>
                     </el-card>
                 </div>
             </el-main>
@@ -404,7 +730,6 @@
 
 <script>
     const {createApp} = Vue;
-    // const ElementPlusIconsVue = window.ElementPlusIconsVue;
 
     const app = createApp({
         data() {
@@ -435,25 +760,74 @@
                 if (!this.tableSearch) return this.tables;
                 const search = this.tableSearch.toLowerCase();
                 return this.tables.filter(t => t.tableName.toLowerCase().includes(search));
+            },
+            generateCreateTableSql() {
+                if (!this.selectedTable || !this.selectedTable.columns) return '';
+                
+                const tableName = this.selectedTable.tableName;
+                const columns = this.selectedTable.columns.map(col => {
+                    let sql = `  \`${col.columnName}\` ${col.typeName}`;
+                    if (col.columnSize > 0) {
+                        sql += `(${col.columnSize})`;
+                    }
+                    if (!col.nullable) {
+                        sql += ' NOT NULL';
+                    }
+                    if (col.autoIncrement) {
+                        sql += ' AUTO_INCREMENT';
+                    }
+                    if (col.columnDef) {
+                        sql += ` DEFAULT '${col.columnDef}'`;
+                    }
+                    if (col.remarks) {
+                        sql += ` COMMENT '${col.remarks}'`;
+                    }
+                    return sql;
+                }).join(',\n');
+                
+                return `CREATE TABLE \`${tableName}\` (\n${columns}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${this.selectedTable.remarks || ''}';`;
             }
         },
         methods: {
             handleMenuSelect(key) {
                 this.currentView = key;
-                if (key === 'datasources' && this.dataSources.length === 0) {
-                    this.loadDataSources();
-                }
-                if (key === 'tables' && this.dataSources.length === 0) {
+                if ((key === 'datasources' || key === 'tables') && this.dataSources.length === 0) {
                     this.loadDataSources();
                 }
             },
+            
+            refreshCurrentView() {
+                if (this.currentView === 'datasources') {
+                    this.loadDataSources();
+                } else if (this.currentView === 'tables' && this.selectedDataSource) {
+                    this.loadTables();
+                } else {
+                    this.$message.info('当前视图已刷新');
+                }
+            },
+            
+            getDatabaseTypeColor(type) {
+                const typeMap = {
+                    'MySQL': 'success',
+                    'PostgreSQL': 'warning',
+                    'Oracle': 'danger',
+                    'SQL Server': 'info'
+                };
+                return typeMap[type] || 'info';
+            },
+            
             async loadDataSources() {
                 this.loading = true;
                 try {
                     const response = await axios.get('./api/datasource/list');
                     console.log('Data sources response:', response.data);
                     if (response.data.code === 200) {
-                        this.dataSources = response.data.data;
+                        console.log("加载数据源成功:", response.data.data);
+                        this.dataSources = response.data.data.map(ds => ({
+                            ...ds,
+                            status: 'success'
+                        }));
+                        this.$message.success(`成功加载 ${this.dataSources.length} 个数据源`);
                     } else {
                         this.$message.error('加载数据源失败: ' + response.data.message);
                     }
@@ -464,6 +838,63 @@
                     this.loading = false;
                 }
             },
+            
+            async testConnection(dataSource) {
+                try {
+                    const response = await axios.post('./api/datasource/test', {
+                        name: dataSource.name
+                    });
+                    if (response.data.code === 200) {
+                        this.$message.success(`数据源 "${dataSource.name}" 连接成功`);
+                        dataSource.status = 'success';
+                    } else {
+                        this.$message.error(`数据源 "${dataSource.name}" 连接失败: ` + response.data.message);
+                        dataSource.status = 'error';
+                    }
+                } catch (error) {
+                    this.$message.error(`测试连接失败: ` + error.message);
+                    dataSource.status = 'error';
+                }
+            },
+            
+            async testAllConnections() {
+                const loading = this.$loading({
+                    lock: true,
+                    text: '正在测试所有连接...',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                
+                try {
+                    const promises = this.dataSources.map(ds => this.testConnection(ds));
+                    await Promise.all(promises);
+                    this.$message.success('所有连接测试完成');
+                } finally {
+                    loading.close();
+                }
+            },
+            
+            editDataSource(dataSource) {
+                this.$message.info(`编辑数据源: ${dataSource.name}`);
+            },
+            
+            deleteDataSource(dataSource) {
+                this.$confirm(`确定要删除数据源 "${dataSource.name}" 吗？`, '提示', {
+                    type: 'warning'
+                }).then(async () => {
+                    try {
+                        const response = await axios.delete(`./api/datasource/${dataSource.name}`);
+                        if (response.data.code === 200) {
+                            this.$message.success('删除成功');
+                            this.loadDataSources();
+                        } else {
+                            this.$message.error('删除失败: ' + response.data.message);
+                        }
+                    } catch (error) {
+                        this.$message.error('删除失败: ' + error.message);
+                    }
+                }).catch(() => {});
+            },
+            
             async loadTables() {
                 if (!this.selectedDataSource) return;
 
@@ -477,7 +908,7 @@
                     console.log('Tables response:', response.data);
                     if (response.data.code === 200) {
                         this.tables = response.data.data;
-                        this.$message.success(`加载了 ${this.tables.length} 个表`);
+                        this.$message.success(`成功加载 ${this.tables.length} 个表`);
                     } else {
                         this.$message.error('加载表列表失败: ' + response.data.message);
                     }
@@ -488,10 +919,11 @@
                     this.loadingTables = false;
                 }
             },
+            
             async viewTableDetail(tableName) {
                 const loading = this.$loading({
                     lock: true,
-                    text: '加载表详情...',
+                    text: '正在加载表详情...',
                     background: 'rgba(0, 0, 0, 0.7)'
                 });
                 try {
@@ -511,10 +943,34 @@
                 } finally {
                     loading.close();
                 }
+            },
+            
+            exportTableInfo() {
+                if (!this.selectedTable) return;
+                
+                const data = JSON.stringify(this.selectedTable, null, 2);
+                const blob = new Blob([data], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${this.selectedTable.tableName}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                this.$message.success('导出成功');
+            },
+            
+            copySql() {
+                navigator.clipboard.writeText(this.generateCreateTableSql).then(() => {
+                    this.$message.success('SQL已复制到剪贴板');
+                }).catch(() => {
+                    this.$message.error('复制失败');
+                });
             }
         },
         mounted() {
             console.log('DB Dev UI initialized with Element Plus');
+            this.loadDataSources();
         }
     });
 
