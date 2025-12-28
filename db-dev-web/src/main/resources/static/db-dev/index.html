@@ -680,23 +680,141 @@
 
                 <!-- SQL 执行器 -->
                 <div v-if="currentView === 'sql'">
-                    <el-card shadow="hover">
+                    <el-card shadow="hover" style="margin-bottom: 20px;">
                         <template #header>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <el-icon><Lightning /></el-icon>
-                                <span style="font-weight: 600;">SQL 执行器</span>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon><Lightning /></el-icon>
+                                    <span style="font-weight: 600;">SQL 执行器</span>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <el-select
+                                        v-model="sqlDataSource"
+                                        placeholder="选择数据源"
+                                        style="width: 200px;"
+                                        clearable>
+                                        <el-option
+                                            v-for="ds in dataSources"
+                                            :key="ds.name"
+                                            :label="ds.name"
+                                            :value="ds.name">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <el-icon v-if="ds.primary" color="#f56c6c"><Star /></el-icon>
+                                                <span>{{ ds.name }}</span>
+                                                <el-tag size="small" :type="getDatabaseTypeColor(ds.databaseType)">{{ ds.databaseType }}</el-tag>
+                                            </div>
+                                        </el-option>
+                                    </el-select>
+                                    <el-button type="primary" @click="executeSql" :loading="executingSql" :disabled="!sqlDataSource || !sqlText">
+                                        <el-icon><CaretRight /></el-icon>
+                                        执行
+                                    </el-button>
+                                    <el-button @click="clearSql">
+                                        <el-icon><Delete /></el-icon>
+                                        清空
+                                    </el-button>
+                                </div>
                             </div>
                         </template>
+                        
                         <el-alert
-                            title="此功能即将推出"
-                            type="info"
-                            description="SQL编辑器、语法高亮、执行计划分析等功能正在开发中..."
+                            title="仅支持SELECT查询语句"
+                            type="warning"
+                            description="为了安全考虑，SQL执行器只允许执行查询语句，不支持INSERT、UPDATE、DELETE等修改操作"
                             :closable="false"
-                            show-icon>
+                            show-icon
+                            style="margin-bottom: 15px;">
                         </el-alert>
-                        <div style="margin-top: 20px; padding: 40px; text-align: center; color: #909399;">
-                            <el-icon size="48"><Clock /></el-icon>
-                            <p style="margin-top: 16px;">敬请期待</p>
+                        
+                        <el-input
+                            v-model="sqlText"
+                            type="textarea"
+                            :rows="8"
+                            placeholder="请输入SELECT查询语句..."
+                            style="margin-bottom: 15px; font-family: 'Courier New', monospace;"
+                            resize="none">
+                        </el-input>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <el-tag v-if="sqlResult" type="success" size="small">
+                                    <el-icon><SuccessFilled /></el-icon>
+                                    查询成功: {{ sqlResult.rowCount }} 行数据
+                                </el-tag>
+                                <el-tag v-if="sqlResult && sqlResult.hasMore" type="warning" size="small">
+                                    <el-icon><Warning /></el-icon>
+                                    数据已截断(最多显示1000行)
+                                </el-tag>
+                            </div>
+                            <el-button-group>
+                                <el-button size="small" @click="formatSql">
+                                    <el-icon><MagicStick /></el-icon>
+                                    格式化
+                                </el-button>
+                                <el-button size="small" @click="showSqlHistory = true">
+                                    <el-icon><Clock /></el-icon>
+                                    历史记录
+                                </el-button>
+                            </el-button-group>
+                        </div>
+                    </el-card>
+                    
+                    <!-- 查询结果 -->
+                    <el-card v-if="sqlResult && sqlResult.success" shadow="hover">
+                        <template #header>
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <el-icon><Document /></el-icon>
+                                    <span style="font-weight: 600;">查询结果</span>
+                                    <el-tag type="success" size="small">{{ sqlResult.rowCount }} 行</el-tag>
+                                </div>
+                                <div>
+                                    <el-button type="primary" size="small" @click="exportSqlResult">
+                                        <el-icon><Download /></el-icon>
+                                        导出结果
+                                    </el-button>
+                                </div>
+                            </div>
+                        </template>
+                        
+                        <el-table
+                            :data="sqlResult.data"
+                            stripe
+                            border
+                            style="width: 100%"
+                            height="500"
+                            v-loading="executingSql">
+                            <el-table-column
+                                v-for="column in sqlResult.columns"
+                                :key="column.name"
+                                :prop="column.name"
+                                :label="column.name"
+                                :min-width="Math.max(column.width * 8, 120)">
+                                <template #header>
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-weight: 600;">{{ column.name }}</span>
+                                        <el-tag size="mini" type="info">{{ column.type }}</el-tag>
+                                    </div>
+                                </template>
+                                <template #default="scope">
+                                    <span style="font-family: 'Courier New', monospace; font-size: 12px;">
+                                        {{ scope.row[column.name] !== null && scope.row[column.name] !== undefined ? scope.row[column.name] : 'NULL' }}
+                                    </span>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-card>
+                    
+                    <!-- 错误信息 -->
+                    <el-card v-if="sqlResult && !sqlResult.success" shadow="hover" style="border-left: 4px solid #f56c6c;">
+                        <template #header>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <el-icon color="#f56c6c"><CircleCloseFilled /></el-icon>
+                                <span style="font-weight: 600; color: #f56c6c;">执行错误</span>
+                            </div>
+                        </template>
+                        <div style="color: #f56c6c; font-family: 'Courier New', monospace; padding: 10px; background: #fef0f0; border-radius: 4px;">
+                            {{ sqlResult.message }}
                         </div>
                     </el-card>
                 </div>
@@ -748,7 +866,14 @@
                 selectedDataSource: '',
                 selectedTable: null,
                 loading: false,
-                loadingTables: false
+                loadingTables: false,
+                // SQL执行器相关
+                sqlDataSource: '',
+                sqlText: '',
+                sqlResult: null,
+                executingSql: false,
+                showSqlHistory: false,
+                sqlHistory: []
             };
         },
         computed: {
@@ -966,6 +1091,165 @@
                 }).catch(() => {
                     this.$message.error('复制失败');
                 });
+            },
+            
+            // SQL执行相关方法
+            async executeSql() {
+                if (!this.sqlDataSource || !this.sqlText.trim()) {
+                    this.$message.warning('请选择数据源并输入SQL语句');
+                    return;
+                }
+                
+                this.executingSql = true;
+                try {
+                    const request = {
+                        dataSourceName: this.sqlDataSource,
+                        sql: this.sqlText.trim(),
+                        params: []
+                    };
+                    
+                    const response = await axios.post('./api/sql/execute', request);
+                    if (response.data.code === 200) {
+                        this.sqlResult = {
+                            success: true,
+                            columns: response.data.data.columns,
+                            data: response.data.data.data,
+                            rowCount: response.data.data.rowCount,
+                            hasMore: response.data.data.hasMore,
+                            message: '查询成功'
+                        };
+                        this.$message.success('SQL执行成功');
+                        
+                        // 添加到历史记录
+                        this.addToSqlHistory(this.sqlText.trim());
+                    } else {
+                        this.sqlResult = {
+                            success: false,
+                            message: response.data.message
+                        };
+                        this.$message.error('SQL执行失败: ' + response.data.message);
+                    }
+                } catch (error) {
+                    this.sqlResult = {
+                        success: false,
+                        message: error.message
+                    };
+                    this.$message.error('SQL执行错误: ' + error.message);
+                } finally {
+                    this.executingSql = false;
+                }
+            },
+            
+            clearSql() {
+                this.sqlText = '';
+                this.sqlResult = null;
+                this.$message.info('已清空SQL');
+            },
+            
+            formatSql() {
+                if (!this.sqlText.trim()) {
+                    this.$message.warning('请先输入SQL语句');
+                    return;
+                }
+                
+                try {
+                    // 简单的SQL格式化
+                    let sql = this.sqlText.trim();
+                    // 将SELECT、FROM、WHERE等关键字换行
+                    sql = sql.replace(/\b(SELECT|FROM|WHERE|ORDER BY|GROUP BY|HAVING|JOIN|LEFT JOIN|RIGHT JOIN|INNER JOIN)\b/gi, '\n$1');
+                    // 移除多余的空行
+                    sql = sql.replace(/\n\s*\n/g, '\n');
+                    // 缩进处理
+                    let lines = sql.split('\n');
+                    let indentLevel = 0;
+                    lines = lines.map(line => {
+                        line = line.trim();
+                        if (!line) return '';
+                        
+                        // 减少缩进
+                        if (line.startsWith('FROM') || line.startsWith('WHERE') ||
+                            line.startsWith('ORDER BY') || line.startsWith('GROUP BY') ||
+                            line.startsWith('HAVING')) {
+                            indentLevel = Math.max(0, indentLevel - 1);
+                        }
+                        
+                        const indentedLine = '  '.repeat(indentLevel) + line;
+                        
+                        // 增加缩进
+                        if (line.startsWith('SELECT') || line.startsWith('FROM') ||
+                            line.startsWith('WHERE') || line.includes('JOIN')) {
+                            indentLevel++;
+                        }
+                        
+                        return indentedLine;
+                    });
+                    
+                    this.sqlText = lines.filter(line => line !== '').join('\n');
+                    this.$message.success('SQL格式化完成');
+                } catch (error) {
+                    this.$message.warning('格式化失败，请检查SQL语法');
+                }
+            },
+            
+            addToSqlHistory(sql) {
+                // 避免重复添加相同的SQL
+                const existingIndex = this.sqlHistory.indexOf(sql);
+                if (existingIndex !== -1) {
+                    this.sqlHistory.splice(existingIndex, 1);
+                }
+                
+                // 添加到开头
+                this.sqlHistory.unshift(sql);
+                
+                // 限制历史记录数量
+                if (this.sqlHistory.length > 50) {
+                    this.sqlHistory = this.sqlHistory.slice(0, 50);
+                }
+            },
+            
+            exportSqlResult() {
+                if (!this.sqlResult || !this.sqlResult.success) {
+                    this.$message.warning('没有可导出的查询结果');
+                    return;
+                }
+                
+                try {
+                    // 生成CSV内容
+                    let csvContent = '';
+                    
+                    // 添加列标题
+                    const headers = this.sqlResult.columns.map(col => col.name);
+                    csvContent += headers.join(',') + '\n';
+                    
+                    // 添加数据行
+                    this.sqlResult.data.forEach(row => {
+                        const values = headers.map(header => {
+                            const value = row[header];
+                            if (value === null || value === undefined) {
+                                return 'NULL';
+                            }
+                            // 如果值包含逗号、换行符或引号，需要用引号包围并转义
+                            if (typeof value === 'string' && (value.includes(',') || value.includes('\n') || value.includes('"'))) {
+                                return '"' + value.replace(/"/g, '""') + '"';
+                            }
+                            return String(value);
+                        });
+                        csvContent += values.join(',') + '\n';
+                    });
+                    
+                    // 创建并下载文件
+                    const blob = new Blob(['\ufeff' + csvContent], {type: 'text/csv;charset=utf-8;'});
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.href = url;
+                    link.download = `query_result_${new Date().getTime()}.csv`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    this.$message.success('导出成功');
+                } catch (error) {
+                    this.$message.error('导出失败: ' + error.message);
+                }
             }
         },
         mounted() {
