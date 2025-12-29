@@ -32,6 +32,11 @@
               <el-icon><Delete /></el-icon>
               清空
             </el-button>
+            <el-button @click="showHistoryDrawer = true">
+              <el-icon><Clock /></el-icon>
+              历史记录
+              <el-badge v-if="sqlHistory.length > 0" :value="sqlHistory.length" :max="99" style="margin-left: 6px;" />
+            </el-button>
           </div>
         </div>
       </template>
@@ -176,6 +181,73 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 执行历史抽屉 -->
+    <el-drawer
+      v-model="showHistoryDrawer"
+      title="SQL 执行历史"
+      direction="rtl"
+      size="500px">
+      <template #header>
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <el-icon><Clock /></el-icon>
+            <span style="font-weight: 600;">SQL 执行历史</span>
+          </div>
+          <el-button type="danger" size="small" text @click="clearHistory" :disabled="sqlHistory.length === 0">
+            <el-icon><Delete /></el-icon>
+            清空历史
+          </el-button>
+        </div>
+      </template>
+      
+      <el-alert
+        title="历史记录存储在本地浏览器中，最多保留100条记录"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 15px;">
+      </el-alert>
+      
+      <div v-if="sqlHistory.length === 0" style="text-align: center; padding: 40px; color: #909399;">
+        <el-icon size="48"><Document /></el-icon>
+        <p>暂无执行历史</p>
+      </div>
+      
+      <div v-else class="history-list">
+        <div
+          v-for="(item, index) in sqlHistory"
+          :key="item.id"
+          class="history-item"
+          @click="loadHistorySql(item)">
+          <div class="history-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <el-tag :type="item.success ? 'success' : 'danger'" size="small">
+                {{ item.success ? '成功' : '失败' }}
+              </el-tag>
+              <el-tag type="info" size="small">{{ item.dataSource }}</el-tag>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="history-time">{{ formatTime(item.timestamp) }}</span>
+              <el-button
+                type="danger"
+                size="small"
+                text
+                @click.stop="deleteHistoryItem(index)">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+          </div>
+          <div class="history-sql">{{ truncateSql(item.sql) }}</div>
+          <div v-if="item.success && item.rowCount !== undefined" class="history-result">
+            返回 {{ item.rowCount }} 行数据
+          </div>
+          <div v-if="!item.success && item.errorMessage" class="history-error">
+            {{ truncateError(item.errorMessage) }}
+          </div>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -200,6 +272,116 @@ const cellDataDialog = reactive({
   type: ''
 })
 
+// 执行历史相关
+const HISTORY_STORAGE_KEY = 'sql_executor_history'
+const MAX_HISTORY_COUNT = 100
+const showHistoryDrawer = ref(false)
+const sqlHistory = ref([])
+
+// 加载历史记录
+const loadHistory = () => {
+  try {
+    const stored = localStorage.getItem(HISTORY_STORAGE_KEY)
+    if (stored) {
+      sqlHistory.value = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('加载历史记录失败:', error)
+    sqlHistory.value = []
+  }
+}
+
+// 保存历史记录
+const saveHistory = () => {
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(sqlHistory.value))
+  } catch (error) {
+    console.error('保存历史记录失败:', error)
+  }
+}
+
+// 添加历史记录
+const addHistoryItem = (sql, dataSource, success, rowCount, errorMessage) => {
+  // 检查是否存在相同SQL和数据源的记录，如果存在则移除旧记录
+  const existingIndex = sqlHistory.value.findIndex(
+    item => item.sql.trim() === sql.trim() && item.dataSource === dataSource
+  )
+  if (existingIndex !== -1) {
+    sqlHistory.value.splice(existingIndex, 1)
+  }
+  
+  const item = {
+    id: Date.now(),
+    sql,
+    dataSource,
+    success,
+    rowCount,
+    errorMessage,
+    timestamp: new Date().toISOString()
+  }
+  
+  // 添加到开头
+  sqlHistory.value.unshift(item)
+  
+  // 超过100条则删除最旧的
+  if (sqlHistory.value.length > MAX_HISTORY_COUNT) {
+    sqlHistory.value = sqlHistory.value.slice(0, MAX_HISTORY_COUNT)
+  }
+  
+  saveHistory()
+}
+
+// 删除单条历史记录
+const deleteHistoryItem = (index) => {
+  sqlHistory.value.splice(index, 1)
+  saveHistory()
+  ElMessage.success('已删除该条记录')
+}
+
+// 清空历史记录
+const clearHistory = () => {
+  sqlHistory.value = []
+  saveHistory()
+  ElMessage.success('历史记录已清空')
+}
+
+// 加载历史SQL到编辑器
+const loadHistorySql = (item) => {
+  sqlText.value = item.sql
+  sqlDataSource.value = item.dataSource
+  showHistoryDrawer.value = false
+  ElMessage.success('已加载历史SQL')
+}
+
+// 格式化时间
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now - date
+  
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
+  
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 截断SQL显示
+const truncateSql = (sql) => {
+  const trimmed = sql.trim().replace(/\s+/g, ' ')
+  return trimmed.length > 100 ? trimmed.substring(0, 100) + '...' : trimmed
+}
+
+// 截断错误信息
+const truncateError = (msg) => {
+  return msg.length > 80 ? msg.substring(0, 80) + '...' : msg
+}
+
 const executeSqlQuery = async () => {
   if (!sqlDataSource.value || !sqlText.value.trim()) {
     ElMessage.warning('请选择数据源并输入SQL语句')
@@ -221,12 +403,16 @@ const executeSqlQuery = async () => {
       rowCount: res.data.rowCount,
       hasMore: res.data.hasMore
     }
+    // 添加成功记录到历史
+    addHistoryItem(sqlText.value.trim(), sqlDataSource.value, true, res.data.rowCount, null)
     ElMessage.success('SQL执行成功')
   } catch (error) {
     sqlResult.value = {
       success: false,
       message: error.message
     }
+    // 添加失败记录到历史
+    addHistoryItem(sqlText.value.trim(), sqlDataSource.value, false, null, error.message)
     ElMessage.error('SQL执行失败')
   } finally {
     executingSql.value = false
@@ -348,6 +534,8 @@ onMounted(async () => {
   if (datasourceStore.dataSources.length === 0) {
     await datasourceStore.loadDataSources()
   }
+  // 加载历史记录
+  loadHistory()
 })
 </script>
 
@@ -362,5 +550,58 @@ onMounted(async () => {
   color: #909399;
   font-style: italic;
   opacity: 0.7;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-item {
+  padding: 12px;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.history-item:hover {
+  border-color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.history-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+.history-sql {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #303133;
+  background-color: #f5f7fa;
+  padding: 8px;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.history-result {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #67c23a;
+}
+
+.history-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #f56c6c;
 }
 </style>
