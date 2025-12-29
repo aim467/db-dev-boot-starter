@@ -1,4 +1,4 @@
-package com.dbdev.web.vo;
+package com.dbdev.core.response;
 
 import lombok.Data;
 

@@ -2,7 +2,7 @@ package com.dbdev.web.controller;
 
 import com.dbdev.core.model.DataSourceInfo;
 import com.dbdev.core.service.DataSourceService;
-import com.dbdev.web.vo.Result;
+import com.dbdev.core.response.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -17,7 +17,7 @@ import javax.sql.DataSource;
 @ConditionalOnClass(DataSource.class)
 @ConditionalOnProperty(prefix = "db.dev", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(DbDevProperties.class)
-@ComponentScan(basePackages = {"com.dbdev.core", "com.dbdev.web"})
+@ComponentScan(basePackages = {"com.dbdev.core", "com.dbdev.web", "com.dbdev.codegen"})
 public class DbDevAutoConfiguration {
 
     public DbDevAutoConfiguration(DbDevProperties properties) {

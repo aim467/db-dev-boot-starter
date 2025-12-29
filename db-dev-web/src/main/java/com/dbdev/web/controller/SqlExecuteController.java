@@ -1,7 +1,7 @@
 package com.dbdev.web.controller;
 
 import com.dbdev.core.service.SqlExecuteService;
-import com.dbdev.web.vo.Result;
+import com.dbdev.core.response.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

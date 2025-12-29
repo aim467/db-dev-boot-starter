@@ -4,7 +4,7 @@ import com.dbdev.core.model.DatabaseMetadata;
 import com.dbdev.core.model.TableMetadata;
 import com.dbdev.core.service.DataSourceService;
 import com.dbdev.core.service.MetadataService;
-import com.dbdev.web.vo.Result;
+import com.dbdev.core.response.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

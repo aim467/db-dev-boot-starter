@@ -21,6 +21,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void configurePathMatch(PathMatchConfigurer configurer) {
         // 为所有 DB Dev 的 Controller 添加统一前缀
         configurer.addPathPrefix(urlPath,
-                c -> c.getPackageName().startsWith("com.dbdev.web.controller"));
+                c -> c.getPackageName().startsWith("com.dbdev.web.controller") ||
+                        c.getPackageName().startsWith("com.dbdev.codegen.controller"));
     }
 }
