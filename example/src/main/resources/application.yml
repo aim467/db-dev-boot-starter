@@ -13,6 +13,7 @@ spring:
       username: sa
       password: ""
     # 不设置默认的 spring.datasource.type，因为我们将通过配置类提供路由数据源
+    type: com.zaxxer.hikari.HikariDataSource
   sql:
     init:
       mode: always

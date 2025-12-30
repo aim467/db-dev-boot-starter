@@ -21,3 +21,11 @@ export const deleteDatasource = (name) => {
     method: 'delete'
   })
 }
+
+export const getPoolStats = (dataSourceName) => {
+  return request({
+    url: '/datasource/pool-stats',
+    method: 'get',
+    params: { dataSourceName }
+  })
+}

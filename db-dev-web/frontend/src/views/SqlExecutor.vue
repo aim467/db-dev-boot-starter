@@ -61,14 +61,16 @@
       
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-          <el-tag v-if="sqlResult" type="success" size="small">
-            <el-icon><SuccessFilled /></el-icon>
-            <span style="font-weight: 600;">查询成功: {{ sqlResult.rowCount }} 行数据</span>
-          </el-tag>
-          <el-tag v-if="sqlResult && sqlResult.hasMore" type="warning" size="small" style="margin-left: 8px;">
-            <el-icon><Warning /></el-icon>
-            数据已截断(最多显示1000行)
-          </el-tag>
+          <template v-if="sqlResult && sqlResult.success">
+            <el-tag type="success" size="small">
+              <el-icon><SuccessFilled /></el-icon>
+            </el-tag>
+            &nbsp;<span>查询成功: {{ sqlResult.rowCount }} 行数据</span>
+            <el-tag v-if="sqlResult.hasMore" type="warning" size="small" style="margin-left: 8px;">
+              <el-icon><Warning /></el-icon>
+              数据已截断(最多显示1000行)
+            </el-tag>
+          </template>
         </div>
         <el-button-group>
           <el-button size="small" @click="formatSql">
@@ -112,7 +114,7 @@
           show-overflow-tooltip>
           <template #header>
             <div style="display: flex; flex-direction: column; gap: 4px;">
-              <span style="font-weight: 600; font-size: 12px;">{{ column.name }}</span>
+              <span style="font-weight: 100;">{{ column.name }}</span>
               <el-tag size="small" type="info" style="font-size: 10px;">{{ column.type }}</el-tag>
             </div>
           </template>
@@ -400,7 +402,7 @@ const executeSqlQuery = async () => {
       success: true,
       columns: res.data.columns,
       data: res.data.data,
-      rowCount: res.data.rowCount,
+      rowCount: res.data.rowCount || 0,
       hasMore: res.data.hasMore
     }
     // 添加成功记录到历史
