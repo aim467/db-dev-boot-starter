@@ -5,7 +5,7 @@ import { resolve } from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  base: '/db-dev',
+  base: './',
   server: {
     port: 5173,
     proxy: {

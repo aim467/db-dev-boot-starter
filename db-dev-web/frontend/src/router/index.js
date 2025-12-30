@@ -1,7 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+// 从当前 URL 动态获取 basePath，适配任何 context-path + uiPath 配置
+const getBasePath = () => {
+  // 通过 assets 目录位置确定 UI 根路径
+  const scriptEl = document.querySelector('script[src*="assets/"]')
+  if (scriptEl?.src) {
+    const url = new URL(scriptEl.src)
+    const assetsIndex = url.pathname.indexOf('/assets/')
+    if (assetsIndex > 0) {
+      return url.pathname.substring(0, assetsIndex) + '/'
+    }
+  }
+  // fallback
+  const pathname = window.location.pathname
+  if (pathname.endsWith('.html')) {
+    return pathname.substring(0, pathname.lastIndexOf('/') + 1)
+  }
+  const pathParts = pathname.split('/').filter(Boolean)
+  if (pathParts.length > 0) {
+    return '/' + pathParts[0] + '/'
+  }
+  return '/db-dev/'
+}
+
 const router = createRouter({
-  history: createWebHistory('/db-dev/'),
+  history: createWebHistory(getBasePath()),
   routes: [
     {
       path: '/',

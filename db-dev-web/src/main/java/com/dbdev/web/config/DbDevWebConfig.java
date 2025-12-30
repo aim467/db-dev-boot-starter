@@ -25,6 +25,9 @@ public class DbDevWebConfig implements WebMvcConfigurer {
     @Value("${db.dev.ui-path}")
     private String uiPath;
 
+    @Value("${server.servlet.context-path:/}")
+    private String contextPath;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
@@ -54,7 +57,7 @@ public class DbDevWebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
 
         // 主页重定向 - 访问 /db-dev 时重定向到 /db-dev/
-        registry.addRedirectViewController(uiPath, uiPath + "/index.html");
+        registry.addRedirectViewController(uiPath,  uiPath + "/index.html");
 
         log.info("DB Dev UI view controller registered: {}", uiPath);
     }
