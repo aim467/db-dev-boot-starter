@@ -2,6 +2,8 @@ package com.dbdev.codegen.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 代码生成配置
  */
@@ -33,9 +35,9 @@ public class CodeGenConfig {
     private String outputDir;
     
     /**
-     * 生成类型：ENTITY, MAPPER, XML, REPOSITORY, ALL
+     * 生成类型列表：ENTITY, MAPPER, XML, REPOSITORY
      */
-    private String generateType;
+    private List<String> generateTypes;
     
     /**
      * 是否覆盖已存在文件

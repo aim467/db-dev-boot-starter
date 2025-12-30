@@ -47,29 +47,24 @@ public class CodeGenService {
         }
 
         Map<String, String> generatedFiles = new LinkedHashMap<>();
-        String generateType = config.getGenerateType() == null ? "ALL" : config.getGenerateType().toUpperCase();
+        List<String> generateTypes = config.getGenerateTypes();
+        
+        // 如果为空或包含ALL，则生成全部
+        boolean generateAll = generateTypes == null || generateTypes.isEmpty() 
+                || generateTypes.stream().anyMatch(t -> "ALL".equalsIgnoreCase(t));
 
         // 根据类型生成代码
-        switch (generateType) {
-            case "ENTITY":
-                generatedFiles.put("Entity", generateEntity(table, config));
-                break;
-            case "MAPPER":
-                generatedFiles.put("Mapper", generateMapper(table, config));
-                break;
-            case "XML":
-                generatedFiles.put("XML", generateXml(table, config));
-                break;
-            case "REPOSITORY":
-                generatedFiles.put("Repository", generateRepository(table, config));
-                break;
-            case "ALL":
-            default:
-                generatedFiles.put("Entity", generateEntity(table, config));
-                generatedFiles.put("Mapper", generateMapper(table, config));
-                generatedFiles.put("XML", generateXml(table, config));
-                generatedFiles.put("Repository", generateRepository(table, config));
-                break;
+        if (generateAll || generateTypes.stream().anyMatch(t -> "ENTITY".equalsIgnoreCase(t))) {
+            generatedFiles.put("Entity", generateEntity(table, config));
+        }
+        if (generateAll || generateTypes.stream().anyMatch(t -> "MAPPER".equalsIgnoreCase(t))) {
+            generatedFiles.put("Mapper", generateMapper(table, config));
+        }
+        if (generateAll || generateTypes.stream().anyMatch(t -> "XML".equalsIgnoreCase(t))) {
+            generatedFiles.put("XML", generateXml(table, config));
+        }
+        if (generateAll || generateTypes.stream().anyMatch(t -> "REPOSITORY".equalsIgnoreCase(t))) {
+            generatedFiles.put("Repository", generateRepository(table, config));
         }
 
         return generatedFiles;

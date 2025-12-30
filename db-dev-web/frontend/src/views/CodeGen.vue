@@ -67,13 +67,12 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="生成类型" prop="generateType">
-              <el-select v-model="form.generateType" style="width: 100%">
-                <el-option label="全部生成" value="ALL" />
-                <el-option label="仅 Entity" value="ENTITY" />
-                <el-option label="仅 Mapper" value="MAPPER" />
-                <el-option label="仅 XML" value="XML" />
-                <el-option label="仅 Repository" value="REPOSITORY" />
+            <el-form-item label="生成类型" prop="generateTypes">
+              <el-select v-model="form.generateTypes" multiple collapse-tags collapse-tags-tooltip style="width: 100%" placeholder="默认全部">
+                <el-option label="Entity" value="ENTITY" />
+                <el-option label="Mapper" value="MAPPER" />
+                <el-option label="XML" value="XML" />
+                <el-option label="Repository" value="REPOSITORY" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -263,7 +262,7 @@ const form = reactive({
   tableName: '',
   basePackage: 'com.example.project',
   author: 'DB Dev',
-  generateType: 'ALL',
+  generateTypes: [],
   outputDir: 'E:/test1',
   overwrite: true,
   entity: {
@@ -465,6 +464,8 @@ loadDataSources()
 .config-card,
 .table-preview-card,
 .preview-card {
+  border-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 
