@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import javax.sql.DataSource;
 
@@ -17,6 +18,7 @@ import javax.sql.DataSource;
 @ConditionalOnClass(DataSource.class)
 @ConditionalOnProperty(prefix = "db.dev", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(DbDevProperties.class)
+@EnableScheduling
 @ComponentScan(basePackages = {"com.dbdev.core", "com.dbdev.web", "com.dbdev.codegen"})
 public class DbDevAutoConfiguration {
 

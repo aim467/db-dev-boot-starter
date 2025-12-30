@@ -89,17 +89,6 @@
               <el-input v-model="form.author" placeholder="作者名称" />
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item label="输出目录" prop="outputDir">
-              <el-input v-model="form.outputDir" placeholder="留空则只预览">
-                <template #suffix>
-                  <el-tooltip content="手动输入输出路径">
-                    <el-icon class="input-icon"><FolderOpened /></el-icon>
-                  </el-tooltip>
-                </template>
-              </el-input>
-            </el-form-item>
-          </el-col>
         </el-row>
 
         <!-- 高级配置 -->
@@ -153,9 +142,9 @@
             <el-icon><View /></el-icon>
             预览代码
           </el-button>
-          <el-button type="success" @click="handleGenerate" :loading="generateLoading" :disabled="!form.outputDir">
+          <el-button type="success" @click="handleGenerate" :loading="generateLoading">
             <el-icon><Download /></el-icon>
-            生成代码
+            生成并下载
           </el-button>
         </div>
       </el-form>
@@ -245,7 +234,7 @@ import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDatasourceList } from '@/api/datasource'
 import { getTableList, getTableDetail } from '@/api/metadata'
-import { generate, preview } from '@/api/codegen'
+import { generate, preview, getDownloadUrl } from '@/api/codegen'
 
 const formRef = ref()
 const dataSources = ref([])
@@ -256,6 +245,7 @@ const previewLoading = ref(false)
 const generateLoading = ref(false)
 const activeCollapse = ref([])
 const activeTab = ref('')
+const downloadUrl = ref('')
 
 const form = reactive({
   dataSourceName: '',
@@ -263,7 +253,6 @@ const form = reactive({
   basePackage: 'com.example.project',
   author: 'DB Dev',
   generateTypes: [],
-  outputDir: 'E:/test1',
   overwrite: true,
   entity: {
     useLombok: true,
@@ -388,22 +377,27 @@ const handlePreview = async () => {
   }
 }
 
-// 生成代码
+// 生成代码并下载
 const handleGenerate = async () => {
   try {
     await formRef.value.validate()
-    if (!form.outputDir) {
-      ElMessage.warning('请输入输出目录')
-      return
-    }
 
     generateLoading.value = true
     const res = await generate(form)
     
     if (res.code === 200) {
-      ElMessage.success('代码生成成功')
-      previewCode.value = res.data
-      activeTab.value = Object.keys(res.data)[0] || ''
+      ElMessage.success('代码生成成功，正在下载...')
+      previewCode.value = res.data.files
+      activeTab.value = Object.keys(res.data.files)[0] || ''
+      downloadUrl.value = res.data.downloadUrl
+      
+      // 自动触发下载
+      const link = document.createElement('a')
+      link.href = res.data.downloadUrl
+      link.download = res.data.fileName
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } else {
       ElMessage.error(res.message || '生成失败')
     }
@@ -438,6 +432,7 @@ const resetForm = () => {
   formRef.value?.resetFields()
   previewCode.value = {}
   tableColumns.value = []
+  downloadUrl.value = ''
   form.entity.useLombok = true
   form.entity.useJpa = false
   form.entity.useSwagger = false
