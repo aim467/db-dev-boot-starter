@@ -30,7 +30,7 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "${table.tableName}")
 </#if>
-public class ${className} <#if config.entity.superClass??>extends ${config.entity.superClass}</#if> {
+public class ${className} <#if config.entity.superClass!?has_content>extends ${config.entity.superClass}</#if> {
 
 <#list table.columns as column>
     <#-- 字段注释 -->

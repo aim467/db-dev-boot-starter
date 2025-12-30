@@ -12,7 +12,7 @@ import java.util.List;
  * @date ${date}
  */
 @Mapper
-public interface ${mapperName} <#if config.mapper?? && config.mapper.superClass??>extends ${config.mapper.superClass}<${className}></#if> {
+public interface ${mapperName} <#if config.mapper?? && config.mapper.superClass!?has_content>extends ${config.mapper.superClass}<${className}></#if> {
 
     /**
      * 根据主键查询

@@ -4,10 +4,11 @@
 
     <resultMap id="BaseResultMap" type="${entityPackage}.${className}">
     <#list table.columns as column>
+        <#assign propName = underscoreToCamelCase(column.columnName, false)>
         <#if primaryKeys?? && primaryKeys?seq_contains(column.columnName)>
-        <id column="${column.columnName}" property="${underscoreToCamelCase(column.columnName, false)}" />
+        <id column="${column.columnName}" property="${propName}" />
         <#else>
-        <result column="${column.columnName}" property="${underscoreToCamelCase(column.columnName, false)}" />
+        <result column="${column.columnName}" property="${propName}" />
         </#if>
     </#list>
     </resultMap>
@@ -27,9 +28,8 @@
         SELECT
             <include refid="Base_Column_List" />
         FROM ${table.tableName}
-        WHERE
         <#if primaryKey??>
-            ${primaryKey.columnName} = #{${pkProperty}, jdbcType=${primaryKey.jdbcType!'VARCHAR'}}
+        WHERE ${primaryKey.columnName} = <#noparse>#{</#noparse>${pkProperty}, jdbcType=${primaryKey.jdbcType!'VARCHAR'}<#noparse>}</#noparse>
         </#if>
     </select>
 
@@ -46,7 +46,8 @@
     </#list>
         ) VALUES (
     <#list table.columns as column>
-            #{underscoreToCamelCase(column.columnName, false)}<#if column_has_next>,</#if>
+        <#assign propName = underscoreToCamelCase(column.columnName, false)>
+            <#noparse>#{</#noparse>${propName}<#noparse>}</#noparse><#if column_has_next>,</#if>
     </#list>
         )
     </insert>
@@ -60,7 +61,8 @@
         <foreach collection="list" item="item" separator=",">
         (
     <#list table.columns as column>
-            #{item.underscoreToCamelCase(column.columnName, false)}<#if column_has_next>,</#if>
+        <#assign propName = underscoreToCamelCase(column.columnName, false)>
+            <#noparse>#{item.</#noparse>${propName}<#noparse>}</#noparse><#if column_has_next>,</#if>
     </#list>
         )
         </foreach>
@@ -70,14 +72,21 @@
         UPDATE ${table.tableName} 
         SET 
     <#list table.columns as column>
-            ${column.columnName} = #{underscoreToCamelCase(column.columnName, false)}<#if column_has_next>,</#if>
+        <#assign propName = underscoreToCamelCase(column.columnName, false)>
+            ${column.columnName} = <#noparse>#{</#noparse>${propName}<#noparse>}</#noparse><#if column_has_next>,</#if>
     </#list>
-        WHERE <#if primaryKey??>${primaryKey.columnName} = #{underscoreToCamelCase(primaryKey.columnName, false)}</#if>
+        <#if primaryKey??>
+        <#assign pkProp = underscoreToCamelCase(primaryKey.columnName, false)>
+        WHERE ${primaryKey.columnName} = <#noparse>#{</#noparse>${pkProp}<#noparse>}</#noparse>
+        </#if>
     </update>
 
     <delete id="deleteByPrimaryKey"<#if primaryKey??> parameterType="${getJavaType(primaryKey.typeName)}"</#if>>
         DELETE FROM ${table.tableName} 
-        WHERE <#if primaryKey??>${primaryKey.columnName} = #{underscoreToCamelCase(primaryKey.columnName, false)}</#if>
+        <#if primaryKey??>
+        <#assign pkProp = underscoreToCamelCase(primaryKey.columnName, false)>
+        WHERE ${primaryKey.columnName} = <#noparse>#{</#noparse>${pkProp}<#noparse>}</#noparse>
+        </#if>
     </delete>
 
     <select id="selectByCondition" parameterType="${entityPackage}.${className}" resultMap="BaseResultMap">
@@ -86,8 +95,9 @@
         FROM ${table.tableName}
         <where>
     <#list table.columns as column>
-            <if test="${underscoreToCamelCase(column.columnName, false)} != null">
-                AND ${column.columnName} = #{underscoreToCamelCase(column.columnName, false)}
+        <#assign propName = underscoreToCamelCase(column.columnName, false)>
+            <if test="${propName} != null">
+                AND ${column.columnName} = <#noparse>#{</#noparse>${propName}<#noparse>}</#noparse>
             </if>
     </#list>
         </where>
