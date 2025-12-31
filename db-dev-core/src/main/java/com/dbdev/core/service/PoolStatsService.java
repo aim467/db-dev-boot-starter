@@ -7,9 +7,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
-import java.sql.Connection;
 
 /**
  * 连接池统计服务
@@ -39,7 +37,7 @@ public class PoolStatsService {
      */
     private PoolStats extractPoolStats(String name, DataSource dataSource) {
         String className = dataSource.getClass().getName();
-        
+
         if (className.contains("HikariDataSource")) {
             return extractHikariStats(name, dataSource);
         } else if (className.contains("DruidDataSource")) {

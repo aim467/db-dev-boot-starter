@@ -54,4 +54,9 @@ public class ColumnMetadata {
      * 是否自增
      */
     private boolean autoIncrement;
+
+    /**
+     * 是否主键
+     */
+    private boolean primaryKey;
 }

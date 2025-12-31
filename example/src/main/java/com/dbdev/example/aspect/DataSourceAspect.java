@@ -1,6 +1,5 @@
 package com.dbdev.example.aspect;
 
-import com.dbdev.example.aspect.DataSource;
 import com.dbdev.example.config.RoutingDataSource;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;

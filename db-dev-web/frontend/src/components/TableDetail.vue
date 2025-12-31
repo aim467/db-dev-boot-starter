@@ -5,7 +5,7 @@
         <div style="display: flex; align-items: center; gap: 8px;">
           <el-icon><Document /></el-icon>
           <span style="font-weight: 600;">表详情: {{ table.tableName }}</span>
-          <el-tag type="info" size="small">{{ table.tableType }}</el-tag>
+          <el-tag v-if="table.tableType" type="info" size="small">{{ table.tableType }}</el-tag>
         </div>
         <div style="display: flex; gap: 8px;">
           <el-button type="primary" size="small" @click="exportTableInfo">
@@ -52,7 +52,7 @@
           </el-table-column>
           <el-table-column prop="columnDef" label="默认值" width="120">
             <template #default="scope">
-              {{ scope.row.columnDef || '-' }}
+              {{ scope.row.defaultValue || '-' }}
             </template>
           </el-table-column>
           <el-table-column prop="remarks" label="备注" min-width="200" show-overflow-tooltip>
@@ -73,28 +73,39 @@
         <template #label>
           <span style="display: flex; align-items: center; gap: 4px;">
             <el-icon><Key /></el-icon>
-            索引信息 ({{ table.indexes?.length || 0 }})
+            索引信息 ({{ groupedIndexes.length }})
           </span>
         </template>
-        <el-empty v-if="!table.indexes || table.indexes.length === 0" description="无索引信息" />
-        <el-table v-else :data="table.indexes" stripe border style="width: 100%">
+        <el-empty v-if="groupedIndexes.length === 0" description="无索引信息" />
+        <el-table v-else :data="groupedIndexes" stripe border style="width: 100%">
           <el-table-column prop="indexName" label="索引名" width="200" />
-          <el-table-column prop="columnName" label="列名" width="180" />
+          <el-table-column label="包含列" min-width="250">
+            <template #default="scope">
+              <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                <el-tag 
+                  v-for="(col, idx) in scope.row.columns" 
+                  :key="idx" 
+                  size="small"
+                  type="info"
+                >
+                  {{ col.columnName }}
+                  <span v-if="col.ascOrDesc" style="color: #909399; margin-left: 2px;">
+                    ({{ col.ascOrDesc }})
+                  </span>
+                </el-tag>
+              </div>
+            </template>
+          </el-table-column>
           <el-table-column label="唯一" width="100">
             <template #default="scope">
-              <el-tag :type="scope.row.nonUnique ? 'info' : 'success'" size="small">
-                {{ scope.row.nonUnique ? '否' : '是' }}
+              <el-tag :type="scope.row.unique ? 'success' : 'info'" size="small">
+                {{ scope.row.unique ? '是' : '否' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="type" label="类型" min-width="150">
+          <el-table-column prop="type" label="类型" width="150">
             <template #default="scope">
               {{ scope.row.type || '-' }}
-            </template>
-          </el-table-column>
-          <el-table-column label="排序" width="100">
-            <template #default="scope">
-              {{ scope.row.ascOrDesc || 'ASC' }}
             </template>
           </el-table-column>
         </el-table>
@@ -143,18 +154,47 @@ const props = defineProps({
 
 defineEmits(['close'])
 
+// 将相同索引名的记录合并
+const groupedIndexes = computed(() => {
+  if (!props.table?.indexes || props.table.indexes.length === 0) return []
+  
+  const indexMap = new Map()
+  props.table.indexes.forEach(idx => {
+    const key = idx.indexName
+    if (!indexMap.has(key)) {
+      indexMap.set(key, {
+        indexName: idx.indexName,
+        unique: idx.unique,
+        type: idx.type,
+        columns: []
+      })
+    }
+    indexMap.get(key).columns.push({
+      columnName: idx.columnName,
+      ascOrDesc: idx.ascOrDesc || 'ASC'
+    })
+  })
+  
+  return Array.from(indexMap.values())
+})
+
 const generateCreateTableSql = computed(() => {
   if (!props.table || !props.table.columns) return ''
   
   const tableName = props.table.tableName
+  const parts = []
+  
+  // 字段定义
   const columns = props.table.columns.map(col => {
     let sql = `  \`${col.columnName}\` ${col.typeName}`
     if (col.columnSize > 0) {
       sql += `(${col.columnSize})`
     }
+    
     if (!col.nullable) {
       sql += ' NOT NULL'
     }
+
     if (col.autoIncrement) {
       sql += ' AUTO_INCREMENT'
     }
@@ -165,9 +205,32 @@ const generateCreateTableSql = computed(() => {
       sql += ` COMMENT '${col.remarks}'`
     }
     return sql
-  }).join(',\n')
+  })
+  parts.push(...columns)
   
-  return `CREATE TABLE \`${tableName}\` (\n${columns}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${props.table.remarks || ''}';`
+  // 主键
+  const primaryKeys = props.table.columns.filter(col => col.primaryKey)
+  if (primaryKeys.length > 0) {
+    const pkCols = primaryKeys.map(col => `\`${col.columnName}\``).join(', ')
+    parts.push(`  PRIMARY KEY (${pkCols})`)
+  }
+  
+  // 索引
+  if (groupedIndexes.value.length > 0) {
+    groupedIndexes.value.forEach(idx => {
+      // 跳过主键索引
+      if (idx.indexName === 'PRIMARY') return
+      
+      const idxCols = idx.columns.map(col => `\`${col.columnName}\``).join(', ')
+      if (idx.unique) {
+        parts.push(`  UNIQUE KEY \`${idx.indexName}\` (${idxCols})`)
+      } else {
+        parts.push(`  KEY \`${idx.indexName}\` (${idxCols})`)  
+      }
+    })
+  }
+  
+  return `CREATE TABLE \`${tableName}\` (\n${parts.join(',\n')}\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='${props.table.remarks || ''}';`
 })
 
 const exportTableInfo = () => {
