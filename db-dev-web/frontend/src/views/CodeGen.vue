@@ -101,20 +101,22 @@
               </div>
             </template>
             
-            <el-row :gutter="24">
-              <el-col :span="24">
+            <el-row :gutter="24" style="margin-top: 16px">
+              <el-col :span="20">
                 <div class="checkbox-group">
+                  <el-form-item label="Entity 配置">
                   <el-checkbox v-model="form.overwrite">覆盖已存在文件</el-checkbox>
                   <el-checkbox v-model="form.entity.useLombok">使用 Lombok</el-checkbox>
                   <el-checkbox v-model="form.entity.useJpa">使用 JPA 注解</el-checkbox>
                   <el-checkbox v-model="form.entity.useSwagger">使用 Swagger 注解</el-checkbox>
+                  </el-form-item>
                 </div>
               </el-col>
             </el-row>
 
             <el-row :gutter="24" style="margin-top: 16px">
               <el-col :span="8">
-                <el-form-item label="Entity父类">
+                <el-form-item label="Entity 父类">
                   <el-input v-model="form.entity.superClass" placeholder="可选，如 BaseEntity" />
                 </el-form-item>
               </el-col>
@@ -547,7 +549,7 @@ loadDataSources()
   gap: 12px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #ebeef5;
+  /* border-top: 1px solid #ebeef5; */
 }
 
 .column-count {
