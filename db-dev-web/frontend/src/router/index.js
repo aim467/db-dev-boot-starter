@@ -59,10 +59,11 @@ const router = createRouter({
         }
       ]
     },
-    // 处理 /index.html 等路径，重定向到首页
+    // 处理未知路由，跳转到404页面
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/'
+      name: 'NotFound',
+      component: () => import('@/views/404.vue')
     }
   ]
 })
