@@ -15,14 +15,14 @@ import java.util.List;
 @Slf4j
 @Service
 public class MetadataService {
-    
+
     /**
      * 获取数据库元数据
      */
     public DatabaseMetadata getDatabaseMetadata(DataSource dataSource) throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
-            
+
             return DatabaseMetadata.builder()
                     .databaseName(connection.getCatalog())
                     .productName(metaData.getDatabaseProductName())
@@ -31,7 +31,7 @@ public class MetadataService {
                     .build();
         }
     }
-    
+
     /**
      * 获取表列表
      */
@@ -41,10 +41,10 @@ public class MetadataService {
             return getTables(metaData, connection.getCatalog());
         }
     }
-    
+
     private List<TableMetadata> getTables(DatabaseMetaData metaData, String catalog) throws SQLException {
         List<TableMetadata> tables = new ArrayList<>();
-        
+
         try (ResultSet rs = metaData.getTables(catalog, null, "%", new String[]{"TABLE"})) {
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
@@ -55,10 +55,10 @@ public class MetadataService {
                         .build());
             }
         }
-        
+
         return tables;
     }
-    
+
     /**
      * 获取表详细信息
      */
@@ -66,7 +66,7 @@ public class MetadataService {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             String catalog = connection.getCatalog();
-            
+
             return TableMetadata.builder()
                     .tableName(tableName)
                     .columns(getColumns(metaData, catalog, tableName))
@@ -75,14 +75,14 @@ public class MetadataService {
                     .build();
         }
     }
-    
+
     /**
      * 获取字段列表
      */
-    private List<ColumnMetadata> getColumns(DatabaseMetaData metaData, String catalog, String tableName) 
+    private List<ColumnMetadata> getColumns(DatabaseMetaData metaData, String catalog, String tableName)
             throws SQLException {
         List<ColumnMetadata> columns = new ArrayList<>();
-        
+
         try (ResultSet rs = metaData.getColumns(catalog, null, tableName, "%")) {
             while (rs.next()) {
                 columns.add(ColumnMetadata.builder()
@@ -95,20 +95,58 @@ public class MetadataService {
                         .defaultValue(rs.getString("COLUMN_DEF"))
                         .remarks(rs.getString("REMARKS"))
                         .autoIncrement("YES".equalsIgnoreCase(rs.getString("IS_AUTOINCREMENT")))
+                        .javaType(getJavaType(rs.getString("TYPE_NAME")))
                         .build());
             }
         }
-        
+
         return columns;
     }
-    
+
+
+    /**
+     * 根据 dataType 获取 Java 类型
+     */
+    public static String getJavaType(String dataType) {
+        switch (dataType) {
+            case "VARCHAR":
+            case "CHAR":
+            case "TEXT":
+            case "NVARCHAR":
+            case "NCHAR":
+            case "LONGVARCHAR":
+            case "LONGTEXT":
+                return "String";
+            case "INT":
+            case "INTEGER":
+            case "BIGINT":
+            case "SMALLINT":
+            case "TINYINT":
+                return "Integer";
+            case "FLOAT":
+            case "DOUBLE":
+            case "DECIMAL":
+                return "Double";
+            case "BOOLEAN":
+                return "Boolean";
+            case "DATE":
+            case "DATETIME":
+            case "TIMESTAMP":
+            case "TIME":
+                return "Date";
+            default:
+                return "Object";
+        }
+    }
+
+
     /**
      * 获取索引列表
      */
-    private List<IndexMetadata> getIndexes(DatabaseMetaData metaData, String catalog, String tableName) 
+    private List<IndexMetadata> getIndexes(DatabaseMetaData metaData, String catalog, String tableName)
             throws SQLException {
         List<IndexMetadata> indexes = new ArrayList<>();
-        
+
         try (ResultSet rs = metaData.getIndexInfo(catalog, null, tableName, false, false)) {
             while (rs.next()) {
                 String indexName = rs.getString("INDEX_NAME");
@@ -122,23 +160,23 @@ public class MetadataService {
                 }
             }
         }
-        
+
         return indexes;
     }
-    
+
     /**
      * 获取主键列表
      */
-    private List<String> getPrimaryKeys(DatabaseMetaData metaData, String catalog, String tableName) 
+    private List<String> getPrimaryKeys(DatabaseMetaData metaData, String catalog, String tableName)
             throws SQLException {
         List<String> primaryKeys = new ArrayList<>();
-        
+
         try (ResultSet rs = metaData.getPrimaryKeys(catalog, null, tableName)) {
             while (rs.next()) {
                 primaryKeys.add(rs.getString("COLUMN_NAME"));
             }
         }
-        
+
         return primaryKeys;
     }
 }
