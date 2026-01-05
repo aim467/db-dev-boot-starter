@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
 // 支持通过环境变量或运行时配置自定义 API 地址
 // 默认从当前 URL 动态推断，自动适配任何 context-path + uiPath 配置
@@ -44,9 +45,14 @@ const request = axios.create({
   timeout: 30000
 })
 
-// 请求拦截器
+  // 请求拦截器
 request.interceptors.request.use(
   config => {
+    // 添加token到请求头，优先使用 localStorage，其次使用 sessionStorage
+    const token = localStorage.getItem('db-dev-token') || sessionStorage.getItem('db-dev-token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   error => {
@@ -70,7 +76,26 @@ request.interceptors.response.use(
   },
   error => {
     console.error('Response error:', error)
-    ElMessage.error(error.message || '请求失败')
+    
+    // 处理401未授权错误
+    if (error.response && error.response.status === 401) {
+      // 清除本地存储的token
+      localStorage.removeItem('db-dev-token')
+      localStorage.removeItem('db-dev-username')
+      
+      ElMessage.error('登录已过期，请重新登录')
+      
+      // 跳转到登录页
+      if (router.currentRoute.value.path !== '/login') {
+        router.push('/login')
+      }
+      
+      return Promise.reject(error)
+    }
+    
+    // 其他错误
+    const message = error.response?.data?.message || error.message || '请求失败'
+    ElMessage.error(message)
     return Promise.reject(error)
   }
 )

@@ -1,0 +1,1 @@
+import{r as s}from"./request-CcLfhpZL.js";const o=()=>s({url:"/datasource/list",method:"get"}),a=t=>s({url:"/datasource/test",method:"post",data:{name:t}}),r=t=>s({url:"/datasource/pool-stats",method:"get",params:{dataSourceName:t}});export{o as a,r as g,a as t};

@@ -1,0 +1,1 @@
+import{aZ as o,r as t}from"./vue-vendor-BB5k324P.js";import{a as u}from"./datasource-CNDQnR3F.js";const d=o("datasource",()=>{const a=t([]),s=t(!1);return{dataSources:a,loading:s,loadDataSources:async()=>{s.value=!0;try{const e=await u();return a.value=e.data.map(r=>({...r,status:"success"})),a.value}finally{s.value=!1}}}});export{d as u};

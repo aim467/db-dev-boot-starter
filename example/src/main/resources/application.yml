@@ -3,7 +3,7 @@ spring:
     name: db-dev-example
   datasource:
     mysql:
-      jdbc-url: jdbc:mysql://192.168.1.188:3306/spider-ease?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      jdbc-url: jdbc:mysql://localhost:3307/r_pan?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       driver-class-name: com.mysql.cj.jdbc.Driver
       username: root
       password: 123456
@@ -30,7 +30,9 @@ db:
       read-only: true
       max-rows: 500
     security:
-      enabled: false
+      enabled: true
+      username: admin
+      password: 123456
 
 server:
   port: 5555

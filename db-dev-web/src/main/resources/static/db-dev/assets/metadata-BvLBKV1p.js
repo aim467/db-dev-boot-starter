@@ -1,0 +1,1 @@
+import{r as a}from"./request-CcLfhpZL.js";const s=t=>a({url:"/metadata/tables",method:"get",params:{dataSourceName:t}}),m=(t,e)=>a({url:`/metadata/table/${t}`,method:"get",params:{dataSourceName:e}});export{m as a,s as g};

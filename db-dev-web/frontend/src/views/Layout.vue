@@ -27,14 +27,17 @@
       <el-header height="60px">
         <h2>{{ currentViewTitle }}</h2>
         <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+          <span style="color: #909399; font-size: 14px; margin-right: 8px;">
+            {{ username }}
+          </span>
           <el-tooltip content="刷新页面" placement="bottom">
             <el-button circle size="small" @click="refreshCurrentView">
               <el-icon><Refresh /></el-icon>
             </el-button>
           </el-tooltip>
-          <el-tooltip content="系统设置" placement="bottom">
-            <el-button circle size="small">
-              <el-icon><Setting /></el-icon>
+          <el-tooltip content="登出" placement="bottom">
+            <el-button circle size="small" @click="handleLogout">
+              <el-icon><SwitchButton /></el-icon>
             </el-button>
           </el-tooltip>
         </div>
@@ -51,11 +54,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/api/request'
 
 const route = useRoute()
 const router = useRouter()
+const username = ref('')
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: 'HomeFilled' },
@@ -75,6 +81,38 @@ const currentViewTitle = computed(() => {
 const refreshCurrentView = () => {
   router.go(0)
 }
+
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    // 调用登出接口
+    try {
+      await request.post('/auth/logout')
+    } catch (error) {
+      // 忽略登出接口错误
+    }
+    
+    // 清除本地存储
+    localStorage.removeItem('db-dev-token')
+    localStorage.removeItem('db-dev-username')
+    
+    ElMessage.success('已退出登录')
+    
+    // 跳转到登录页
+    router.push('/login')
+  } catch (error) {
+    // 用户取消
+  }
+}
+
+onMounted(() => {
+  username.value = localStorage.getItem('db-dev-username') || '用户'
+})
 </script>
 
 <style scoped>
