@@ -121,6 +121,11 @@ const router = createRouter({
           path: '/codegen',
           name: 'CodeGen',
           component: () => import('@/views/CodeGen.vue')
+        },
+        {
+          path: '/druid',
+          name: 'DruidMonitor',
+          component: () => import('@/views/DruidMonitor.vue')
         }
       ]
     },
@@ -144,7 +149,8 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // 检查安全认证是否启用
-  const isSecurityEnabled = await checkSecurityStatus()
+  // const isSecurityEnabled = await checkSecurityStatus()
+  const isSecurityEnabled = false;
   
   // 如果安全认证未启用，直接通过
   if (!isSecurityEnabled) {

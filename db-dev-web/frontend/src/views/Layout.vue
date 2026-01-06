@@ -68,7 +68,8 @@ const menuItems = [
   { path: '/datasources', label: '数据源', icon: 'Connection' },
   { path: '/tables', label: '表结构', icon: 'Folder' },
   { path: '/sql', label: 'SQL 执行器', icon: 'Lightning' },
-  { path: '/codegen', label: '代码生成', icon: 'Tools' }
+  { path: '/codegen', label: '代码生成', icon: 'Tools' },
+  { path: '/druid', label: 'Druid 监控', icon: 'DataAnalysis' }
 ]
 
 const currentRoute = computed(() => route.path)
