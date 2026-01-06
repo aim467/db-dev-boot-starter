@@ -80,7 +80,7 @@ public class DruidDataSourceProvider {
                 if (sqlStatMap != null) {
                     sqlStatMap.values().forEach(sqlStat -> {
                         Map<String, Object> stat = new LinkedHashMap<>();
-                        stat.put("sql", truncateSql(sqlStat.getSql()));
+                        stat.put("sql", sqlStat.getSql());
                         stat.put("executeCount", sqlStat.getExecuteCount());
                         stat.put("totalTime", sqlStat.getExecuteMillisTotal());
                         stat.put("maxTime", sqlStat.getExecuteMillisMax());
@@ -131,16 +131,5 @@ public class DruidDataSourceProvider {
         if (url == null) return null;
         // 掩码密码参数
         return url.replaceAll("password=[^&]*", "password=***");
-    }
-
-    /**
-     * 截断过长的 SQL
-     */
-    private String truncateSql(String sql) {
-        if (sql == null) return null;
-        if (sql.length() > 200) {
-            return sql.substring(0, 200) + "...";
-        }
-        return sql;
     }
 }

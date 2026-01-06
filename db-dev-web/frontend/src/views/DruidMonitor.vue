@@ -159,7 +159,7 @@
         </template>
 
         <el-table :data="sqlStats" stripe style="width: 100%" max-height="400" v-loading="sqlLoading">
-          <el-table-column prop="sql" label="SQL" min-width="300" show-overflow-tooltip />
+          <el-table-column prop="sql" label="SQL" min-width="200" show-overflow-tooltip />
           <el-table-column prop="executeCount" label="执行次数" width="100" sortable>
             <template #default="{ row }">
               {{ formatNumber(row.executeCount) }}
