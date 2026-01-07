@@ -51,6 +51,25 @@
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
+            <el-dropdown trigger="click" @command="handleExport">
+              <el-button type="success" size="small">
+                <el-icon><Download /></el-icon>
+                导出
+                <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="markdown">
+                    <el-icon><Document /></el-icon>
+                    Markdown 文档
+                  </el-dropdown-item>
+                  <el-dropdown-item command="html">
+                    <el-icon><Document /></el-icon>
+                    HTML 网页
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
       </template>
@@ -107,6 +126,7 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { useDatasourceStore } from '@/stores/datasource'
 import { getTableList, getTableDetail } from '@/api/metadata'
+import { exportSchema } from '@/api/export'
 import TableDetail from '@/components/TableDetail.vue'
 
 const datasourceStore = useDatasourceStore()
@@ -172,6 +192,47 @@ onMounted(async () => {
     await datasourceStore.loadDataSources()
   }
 })
+
+// 导出表结构文档
+const handleExport = async (format) => {
+  if (!selectedDataSource.value) {
+    ElMessage.warning('请先选择数据源')
+    return
+  }
+
+  try {
+    ElMessage.info('正在导出...')
+    const res = await exportSchema(selectedDataSource.value, format)
+    
+    // 获取文件名
+    const contentDisposition = res.headers?.['content-disposition'] || res.headers?.Content-Disposition
+    let fileName = `schema_${selectedDataSource.value}_${Date.now()}`
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="(.+)"/)
+      if (match && match[1]) {
+        fileName = match[1]
+      }
+    }
+    if (!fileName.endsWith('.md') && !fileName.endsWith('.html')) {
+      fileName += format === 'markdown' ? '.md' : '.html'
+    }
+    
+    // 创建下载链接
+    const blob = new Blob([res.data], { 
+      type: format === 'markdown' ? 'text/markdown' : 'text/html' 
+    })
+    const link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = fileName
+    link.click()
+    window.URL.revokeObjectURL(link.href)
+    
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败: ' + (error.response?.data?.message || error.message))
+  }
+}
 </script>
 
 <style scoped>

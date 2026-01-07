@@ -64,4 +64,8 @@ public class ColumnMetadata {
      * Java 数据类型
      */
     private String javaType;
+
+    public void setPrimaryKey(boolean primaryKey) {
+        this.primaryKey = primaryKey;
+    }
 }
