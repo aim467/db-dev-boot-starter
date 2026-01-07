@@ -242,7 +242,7 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px 20px;
+  padding: 20px 20px;
   border: none;
   border-radius: 16px;
   text-align: center;
