@@ -1,6 +1,8 @@
 package com.dbdev.core.druid;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.support.http.stat.WebAppStat;
+import com.alibaba.druid.support.http.stat.WebAppStatManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -131,5 +133,10 @@ public class DruidDataSourceProvider {
         if (url == null) return null;
         // 掩码密码参数
         return url.replaceAll("password=[^&]*", "password=***");
+    }
+
+    public List<Map<String, Object>> getUrlStats() {
+        List<Map<String, Object>> uriStatData = WebAppStatManager.getInstance().getURIStatData();
+        return uriStatData;
     }
 }
