@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 @ConditionalOnProperty(prefix = "db.dev", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties(DbDevProperties.class)
 @EnableScheduling
-@ComponentScan(basePackages = {"com.dbdev.core", "com.dbdev.web", "com.dbdev.codegen"})
+@ComponentScan(basePackages = {"com.dbdev.core", "com.dbdev.web", "com.dbdev.codegen", "com.dbdev.ai"})
 public class DbDevAutoConfiguration {
 
     public DbDevAutoConfiguration(DbDevProperties properties) {
