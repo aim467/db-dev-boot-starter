@@ -15,3 +15,35 @@ export const analyzeSql = (data) => {
     data
   })
 }
+
+// AI 分析相关 API
+export const getAiStatus = () => {
+  return request({
+    url: '/ai/status',
+    method: 'get'
+  })
+}
+
+export const analyzeSqlWithAi = (data) => {
+  return request({
+    url: '/ai/analyze/sql',
+    method: 'post',
+    data
+  })
+}
+
+export const analyzeExplainWithAi = (data) => {
+  return request({
+    url: '/ai/analyze/explain',
+    method: 'post',
+    data
+  })
+}
+
+export const analyzeTablesWithAi = (data) => {
+  return request({
+    url: '/ai/analyze/tables',
+    method: 'post',
+    data
+  })
+}

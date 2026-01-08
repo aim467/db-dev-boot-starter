@@ -6,6 +6,7 @@
           <div style="display: flex; align-items: center; gap: 8px;">
             <el-icon><Lightning /></el-icon>
             <span style="font-weight: 600;">SQL 执行器</span>
+            <el-tag v-if="aiEnabled" type="success" size="small">AI 增强</el-tag>
           </div>
           <div style="display: flex; gap: 8px;">
             <el-select
@@ -28,9 +29,13 @@
               <el-icon><CaretRight /></el-icon>
               执行
             </el-button>
-            <el-button type="warning" @click="analyzeSqlQuery" :loading="analyzingSql" :disabled="!sqlDataSource || !sqlText">
+            <el-button type="info" @click="analyzeSqlQuery" :loading="analyzingSql" :disabled="!sqlDataSource || !sqlText">
               <el-icon><DataAnalysis /></el-icon>
               分析
+            </el-button>
+            <el-button v-if="aiEnabled" type="warning" @click="aiAnalyzeSqlQuery" :loading="aiAnalyzingSql" :disabled="!sqlDataSource || !sqlText">
+              <el-icon><ChatDotRound /></el-icon>
+              AI 分析
             </el-button>
             <el-button @click="clearSql">
               <el-icon><Delete /></el-icon>
@@ -157,6 +162,95 @@
             </template>
           </el-table-column>
         </el-table>
+      </div>
+    </el-card>
+
+    <!-- AI 分析结果 -->
+    <el-card v-if="aiAnalysisResult" shadow="hover" style="margin-bottom: 20px; border-left: 4px solid #909399;">
+      <template #header>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <el-icon color="#909399"><ChatDotRound /></el-icon>
+            <span style="font-weight: 600;">AI 智能分析</span>
+            <el-tag :type="getRiskTagType(aiAnalysisResult.riskLevel)" size="small">
+              风险: {{ aiAnalysisResult.riskLevel?.toUpperCase() }}
+            </el-tag>
+            <el-tag type="info" size="small" v-if="aiAnalysisResult.performanceImpact">
+              {{ aiAnalysisResult.performanceImpact }}
+            </el-tag>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <el-button type="primary" size="small" text @click="aiAnalysisResult = null">
+              <el-icon><Close /></el-icon>
+              关闭
+            </el-button>
+          </div>
+        </div>
+      </template>
+      
+      <!-- AI 摘要 -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#409eff"><Document /></el-icon>
+          <span style="font-weight: 600;">分析摘要</span>
+        </div>
+        <el-alert :title="aiAnalysisResult.summary" type="info" :closable="false" show-icon>
+        </el-alert>
+      </div>
+      
+      <!-- 问题列表 -->
+      <div v-if="aiAnalysisResult.issues && aiAnalysisResult.issues.length > 0" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#f56c6c"><WarningFilled /></el-icon>
+          <span style="font-weight: 600;">发现问题 ({{ aiAnalysisResult.issues.length }})</span>
+        </div>
+        <el-collapse>
+          <el-collapse-item
+            v-for="(issue, index) in aiAnalysisResult.issues"
+            :key="index"
+            :title="`${index + 1}. ${issue.title} [${issue.severity.toUpperCase()}]`"
+            :name="index">
+            <div style="padding: 8px 0;">
+              <p><strong>位置:</strong> {{ issue.location }}</p>
+              <p><strong>描述:</strong> {{ issue.description }}</p>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+      
+      <!-- 优化建议 -->
+      <div v-if="aiAnalysisResult.suggestions && aiAnalysisResult.suggestions.length > 0" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#67c23a"><CircleCheck /></el-icon>
+          <span style="font-weight: 600;">优化建议 ({{ aiAnalysisResult.suggestions.length }})</span>
+        </div>
+        <div v-for="(suggestion, index) in aiAnalysisResult.suggestions" :key="index" style="margin-bottom: 16px;">
+          <el-alert
+            :title="suggestion.title"
+            :type="getSuggestionType(suggestion.priority)"
+            :closable="false"
+            style="margin-bottom: 8px;">
+            <template #default>
+              <div style="white-space: pre-wrap; line-height: 1.6;">{{ suggestion.description }}</div>
+              <div v-if="suggestion.expectedImprovement" style="margin-top: 8px;">
+                <el-tag type="success" size="small">预期效果: {{ suggestion.expectedImprovement }}</el-tag>
+              </div>
+              <div v-if="suggestion.example" style="margin-top: 8px;">
+                <div style="font-size: 12px; color: #909399; margin-bottom: 4px;">优化示例：</div>
+                <code style="background: #f5f7fa; padding: 8px; border-radius: 4px; display: block; font-family: 'Courier New', monospace; font-size: 12px;">{{ suggestion.example }}</code>
+              </div>
+            </template>
+          </el-alert>
+        </div>
+      </div>
+      
+      <!-- 详细分析 -->
+      <div v-if="aiAnalysisResult.details">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#409eff"><Reading /></el-icon>
+          <span style="font-weight: 600;">详细分析</span>
+        </div>
+        <div class="ai-details" v-html="renderMarkdown(aiAnalysisResult.details)"></div>
       </div>
     </el-card>
     
@@ -337,7 +431,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDatasourceStore } from '@/stores/datasource'
-import { executeSql, analyzeSql } from '@/api/sql'
+import { executeSql, analyzeSql, getAiStatus, analyzeSqlWithAi } from '@/api/sql'
 
 const datasourceStore = useDatasourceStore()
 
@@ -345,8 +439,11 @@ const sqlDataSource = ref('')
 const sqlText = ref('')
 const sqlResult = ref(null)
 const sqlAnalysisResult = ref(null)
+const aiAnalysisResult = ref(null)
+const aiEnabled = ref(false)
 const executingSql = ref(false)
 const analyzingSql = ref(false)
+const aiAnalyzingSql = ref(false)
 
 const cellDataDialog = reactive({
   visible: false,
@@ -531,10 +628,35 @@ const analyzeSqlQuery = async () => {
   }
 }
 
+// AI SQL 分析
+const aiAnalyzeSqlQuery = async () => {
+  if (!sqlDataSource.value || !sqlText.value.trim()) {
+    ElMessage.warning('请选择数据源并输入SQL语句')
+    return
+  }
+  
+  aiAnalyzingSql.value = true
+  try {
+    const res = await analyzeSqlWithAi({
+      dataSourceName: sqlDataSource.value,
+      sql: sqlText.value.trim(),
+      databaseType: 'mysql' // 暂时硬编码，后续可以从数据源信息获取
+    })
+    
+    aiAnalysisResult.value = res.data
+    ElMessage.success('AI 分析完成')
+  } catch (error) {
+    ElMessage.error('AI 分析失败: ' + error.message)
+  } finally {
+    aiAnalyzingSql.value = false
+  }
+}
+
 const clearSql = () => {
   sqlText.value = ''
   sqlResult.value = null
   sqlAnalysisResult.value = null
+  aiAnalysisResult.value = null
   ElMessage.info('已清空SQL')
 }
 
@@ -653,6 +775,16 @@ const getSuggestionType = (priority) => {
   }
 }
 
+// 获取风险标签类型
+const getRiskTagType = (riskLevel) => {
+  switch (riskLevel) {
+    case 'high': return 'danger'
+    case 'medium': return 'warning'
+    case 'low': return 'success'
+    default: return 'info'
+  }
+}
+
 // 获取EXPLAIN表格列
 const getExplainColumns = () => {
   if (!sqlAnalysisResult.value || !sqlAnalysisResult.value.explainData || sqlAnalysisResult.value.explainData.length === 0) {
@@ -684,12 +816,36 @@ const getColumnClass = (key, value) => {
   return ''
 }
 
+// 简单的 Markdown 渲染
+const renderMarkdown = (text) => {
+  if (!text) return ''
+  let html = text
+    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+  return html
+}
+
+// 检查 AI 功能状态
+const checkAiStatus = async () => {
+  try {
+    const res = await getAiStatus()
+    aiEnabled.value = res.data?.enabled || false
+  } catch (error) {
+    console.error('检查 AI 状态失败:', error)
+    aiEnabled.value = false
+  }
+}
+
 onMounted(async () => {
   if (datasourceStore.dataSources.length === 0) {
     await datasourceStore.loadDataSources()
   }
   // 加载历史记录
   loadHistory()
+  // 检查 AI 状态
+  checkAiStatus()
 })
 </script>
 
@@ -773,5 +929,28 @@ onMounted(async () => {
 .explain-success {
   color: #67c23a;
   font-weight: bold;
+}
+
+/* AI 分析详情样式 */
+.ai-details {
+  background: #f8f9fb;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.8;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ai-details :deep(pre) {
+  background: #ebeef5;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.ai-details :deep(code) {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
 }
 </style>
