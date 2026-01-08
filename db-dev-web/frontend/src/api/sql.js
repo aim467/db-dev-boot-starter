@@ -7,3 +7,11 @@ export const executeSql = (data) => {
     data
   })
 }
+
+export const analyzeSql = (data) => {
+  return request({
+    url: '/sql/analyze',
+    method: 'post',
+    data
+  })
+}

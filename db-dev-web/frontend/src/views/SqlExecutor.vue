@@ -28,6 +28,10 @@
               <el-icon><CaretRight /></el-icon>
               执行
             </el-button>
+            <el-button type="warning" @click="analyzeSqlQuery" :loading="analyzingSql" :disabled="!sqlDataSource || !sqlText">
+              <el-icon><DataAnalysis /></el-icon>
+              分析
+            </el-button>
             <el-button @click="clearSql">
               <el-icon><Delete /></el-icon>
               清空
@@ -78,6 +82,81 @@
             格式化
           </el-button>
         </el-button-group>
+      </div>
+    </el-card>
+    
+    <!-- SQL分析结果 -->
+    <el-card v-if="sqlAnalysisResult" shadow="hover" style="margin-bottom: 20px; border-left: 4px solid #e6a23c;">
+      <template #header>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <el-icon color="#e6a23c"><DataAnalysis /></el-icon>
+            <span style="font-weight: 600;">SQL 分析结果</span>
+            <el-tag type="info" size="small">{{ sqlAnalysisResult.databaseType?.toUpperCase() }}</el-tag>
+          </div>
+          <el-button type="primary" size="small" text @click="sqlAnalysisResult = null">
+            <el-icon><Close /></el-icon>
+            关闭
+          </el-button>
+        </div>
+      </template>
+      
+      <!-- 优化建议 -->
+      <div v-if="sqlAnalysisResult.suggestions && sqlAnalysisResult.suggestions.length > 0" style="margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#67c23a"><CircleCheck /></el-icon>
+          <span style="font-weight: 600;">性能优化建议</span>
+        </div>
+        <el-alert
+          v-for="(suggestion, index) in sqlAnalysisResult.suggestions"
+          :key="index"
+          :title="suggestion.title"
+          :type="getSuggestionType(suggestion.priority)"
+          :closable="false"
+          style="margin-bottom: 8px;">
+          <template #default>
+            <div style="white-space: pre-wrap; line-height: 1.6;">{{ suggestion.description }}</div>
+            <div v-if="suggestion.example" style="margin-top: 8px;">
+              <div style="font-size: 12px; color: #909399; margin-bottom: 4px;">示例：</div>
+              <code style="background: #f5f7fa; padding: 8px; border-radius: 4px; display: block; font-family: 'Courier New', monospace; font-size: 12px;">{{ suggestion.example }}</code>
+            </div>
+          </template>
+        </el-alert>
+      </div>
+      <div v-else style="margin-bottom: 20px;">
+        <el-alert title="未发现明显的性能问题" type="success" :closable="false" show-icon>
+          <template #default>
+            查询执行计划看起来正常，建议结合实际业务场景和数据量进行综合评估。
+          </template>
+        </el-alert>
+      </div>
+      
+      <!-- EXPLAIN执行计划 -->
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <el-icon color="#409eff"><List /></el-icon>
+          <span style="font-weight: 600;">EXPLAIN 执行计划</span>
+        </div>
+        <el-table
+          :data="sqlAnalysisResult.explainData"
+          stripe
+          border
+          style="width: 100%"
+          max-height="400">
+          <el-table-column
+            v-for="(value, key) in getExplainColumns()"
+            :key="key"
+            :prop="key"
+            :label="key"
+            min-width="150"
+            show-overflow-tooltip>
+            <template #default="scope">
+              <span :class="getColumnClass(key, scope.row[key])">
+                {{ scope.row[key] }}
+              </span>
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
     </el-card>
     
@@ -258,14 +337,16 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDatasourceStore } from '@/stores/datasource'
-import { executeSql } from '@/api/sql'
+import { executeSql, analyzeSql } from '@/api/sql'
 
 const datasourceStore = useDatasourceStore()
 
 const sqlDataSource = ref('')
 const sqlText = ref('')
 const sqlResult = ref(null)
+const sqlAnalysisResult = ref(null)
 const executingSql = ref(false)
+const analyzingSql = ref(false)
 
 const cellDataDialog = reactive({
   visible: false,
@@ -421,9 +502,39 @@ const executeSqlQuery = async () => {
   }
 }
 
+// SQL分析
+const analyzeSqlQuery = async () => {
+  if (!sqlDataSource.value || !sqlText.value.trim()) {
+    ElMessage.warning('请选择数据源并输入SQL语句')
+    return
+  }
+  
+  analyzingSql.value = true
+  try {
+    const res = await analyzeSql({
+      dataSourceName: sqlDataSource.value,
+      sql: sqlText.value.trim(),
+      params: []
+    })
+    
+    sqlAnalysisResult.value = {
+      success: true,
+      explainData: res.data.explainData,
+      suggestions: res.data.suggestions,
+      databaseType: res.data.databaseType
+    }
+    ElMessage.success('SQL分析完成')
+  } catch (error) {
+    ElMessage.error('SQL分析失败: ' + error.message)
+  } finally {
+    analyzingSql.value = false
+  }
+}
+
 const clearSql = () => {
   sqlText.value = ''
   sqlResult.value = null
+  sqlAnalysisResult.value = null
   ElMessage.info('已清空SQL')
 }
 
@@ -532,6 +643,47 @@ const copyCellData = () => {
   })
 }
 
+// 获取建议类型
+const getSuggestionType = (priority) => {
+  switch (priority) {
+    case 'high': return 'error'
+    case 'medium': return 'warning'
+    case 'low': return 'info'
+    default: return 'info'
+  }
+}
+
+// 获取EXPLAIN表格列
+const getExplainColumns = () => {
+  if (!sqlAnalysisResult.value || !sqlAnalysisResult.value.explainData || sqlAnalysisResult.value.explainData.length === 0) {
+    return {}
+  }
+  return sqlAnalysisResult.value.explainData[0]
+}
+
+// 根据列值获取样式类
+const getColumnClass = (key, value) => {
+  const strValue = String(value).toUpperCase()
+  
+  // 危险值样式
+  if (key === 'type' && strValue === 'ALL') {
+    return 'explain-danger'
+  }
+  if (key === 'Extra' && (strValue.includes('USING FILESORT') || strValue.includes('USING TEMPORARY'))) {
+    return 'explain-warning'
+  }
+  
+  // 安全值样式
+  if (key === 'type' && (strValue === 'CONST' || strValue === 'EQ_REF' || strValue === 'REF')) {
+    return 'explain-success'
+  }
+  if (key === 'Extra' && strValue.includes('USING INDEX')) {
+    return 'explain-success'
+  }
+  
+  return ''
+}
+
 onMounted(async () => {
   if (datasourceStore.dataSources.length === 0) {
     await datasourceStore.loadDataSources()
@@ -605,5 +757,21 @@ onMounted(async () => {
   margin-top: 8px;
   font-size: 12px;
   color: #f56c6c;
+}
+
+/* EXPLAIN结果样式 */
+.explain-danger {
+  color: #f56c6c;
+  font-weight: bold;
+}
+
+.explain-warning {
+  color: #e6a23c;
+  font-weight: bold;
+}
+
+.explain-success {
+  color: #67c23a;
+  font-weight: bold;
 }
 </style>
