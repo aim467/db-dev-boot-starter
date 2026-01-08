@@ -67,6 +67,10 @@
                     <el-icon><Document /></el-icon>
                     HTML 网页
                   </el-dropdown-item>
+                  <el-dropdown-item command="pdf">
+                    <el-icon><Document /></el-icon>
+                    PDF 文档
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -202,8 +206,39 @@ const handleExport = async (format) => {
 
   try {
     ElMessage.info('正在导出...')
+
+    // PDF 导出：前端使用 html2pdf.js 生成
+    if (format === 'pdf') {
+      // 先获取 HTML 内容（Blob 格式）
+      const res = await exportSchema(selectedDataSource.value, 'html')
+      const htmlContent = await res.data.text()
+
+      // 使用 html2pdf.js 生成 PDF
+      const element = document.createElement('div')
+      element.innerHTML = htmlContent
+      element.style.width = '800px'
+      element.style.padding = '20px'
+      element.style.fontFamily = 'Arial, sans-serif'
+
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `schema_${selectedDataSource.value}_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }
+
+      // 等待 html2pdf 加载完成
+      await new Promise((resolve) => setTimeout(resolve, 100))
+
+      window.html2pdf().set(opt).from(element).save()
+      ElMessage.success('PDF 导出成功')
+      return
+    }
+
+    // Markdown 或 HTML 导出
     const res = await exportSchema(selectedDataSource.value, format)
-    
+
     // 获取文件名
     const contentDisposition = res.headers?.['content-disposition'] || res.headers?.Content-Disposition
     let fileName = `schema_${selectedDataSource.value}_${Date.now()}`
@@ -216,17 +251,17 @@ const handleExport = async (format) => {
     if (!fileName.endsWith('.md') && !fileName.endsWith('.html')) {
       fileName += format === 'markdown' ? '.md' : '.html'
     }
-    
+
     // 创建下载链接
-    const blob = new Blob([res.data], { 
-      type: format === 'markdown' ? 'text/markdown' : 'text/html' 
+    const blob = new Blob([res.data], {
+      type: format === 'markdown' ? 'text/markdown' : 'text/html'
     })
     const link = document.createElement('a')
     link.href = window.URL.createObjectURL(blob)
     link.download = fileName
     link.click()
     window.URL.revokeObjectURL(link.href)
-    
+
     ElMessage.success('导出成功')
   } catch (error) {
     console.error('导出失败:', error)

@@ -3,14 +3,10 @@ package com.dbdev.core.service;
 import com.dbdev.core.model.*;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -19,7 +15,6 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 数据库表结构导出服务
@@ -149,25 +144,9 @@ public class SchemaExportService {
     }
 
     /**
-     * 导出为 PDF 格式
-     */
-    public byte[] exportToPdf(String dataSourceName) throws SQLException, IOException, TemplateException {
-        // 先获取 HTML 内容
-        String html = exportToHtml(dataSourceName);
-
-        // 使用 Flying Saucer 将 HTML 转换为 PDF
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            ITextRenderer renderer = new ITextRenderer();
-            renderer.setDocumentFromString(html);
-            renderer.layout();
-            renderer.createPDF(outputStream);
-            return outputStream.toByteArray();
-        }
-    }
-
-    /**
      * 获取完整的数据库元数据（包含所有表的详细信息）
      */
+
     private DatabaseMetadata getFullMetadata(DataSource dataSource) throws SQLException {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
@@ -176,7 +155,7 @@ public class SchemaExportService {
             List<TableMetadata> tables = new ArrayList<>();
 
             // 获取所有表
-            try (ResultSet rs = metaData.getTables(catalog, null, "%", new String[]{"TABLE"})) {
+            try (ResultSet rs = metaData.getTables(catalog, null, "%", new String[] { "TABLE" })) {
                 while (rs.next()) {
                     String tableName = rs.getString("TABLE_NAME");
                     TableMetadata table = TableMetadata.builder()
