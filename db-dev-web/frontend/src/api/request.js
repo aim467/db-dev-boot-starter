@@ -64,6 +64,12 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 对于 blob 响应，直接返回原始 response（包含 headers）
+    const contentType = response.headers?.['content-type'] || ''
+    if (response.data instanceof Blob || contentType.includes('application/octet-stream')) {
+      return response
+    }
+    
     const res = response.data
     
     // 如果返回的状态码不是200，则认为是错误
