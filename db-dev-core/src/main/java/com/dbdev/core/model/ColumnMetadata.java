@@ -65,7 +65,16 @@ public class ColumnMetadata {
      */
     private String javaType;
 
+    /**
+     * 格式化后的类型（用于模板渲染）
+     */
+    private String formattedType;
+
     public void setPrimaryKey(boolean primaryKey) {
         this.primaryKey = primaryKey;
+    }
+
+    public void setFormattedType(String formattedType) {
+        this.formattedType = formattedType;
     }
 }
