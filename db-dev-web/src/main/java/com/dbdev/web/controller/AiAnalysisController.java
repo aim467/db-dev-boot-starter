@@ -1,11 +1,11 @@
 package com.dbdev.web.controller;
 
+import com.dbdev.ai.model.AiAnalysisResult;
+import com.dbdev.ai.service.AiAnalysisService;
+import com.dbdev.ai.service.impl.LocalAnalysisService;
+import com.dbdev.ai.service.impl.OpenAiAnalysisService;
 import com.dbdev.core.model.TableMetadata;
 import com.dbdev.core.response.Result;
-import com.dbdev.core.service.ai.AiAnalysisResult;
-import com.dbdev.core.service.ai.AiAnalysisService;
-import com.dbdev.core.service.ai.impl.LocalAnalysisService;
-import com.dbdev.core.service.ai.impl.OpenAiAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +68,7 @@ public class AiAnalysisController extends BaseController {
         if (result.isSuccess()) {
             return Result.success(result);
         } else {
-            return Result.error(result.getErrorMessage());
+            return Result.error(result.getError());
         }
     }
 
@@ -95,7 +95,7 @@ public class AiAnalysisController extends BaseController {
         if (result.isSuccess()) {
             return Result.success(result);
         } else {
-            return Result.error(result.getErrorMessage());
+            return Result.error(result.getError());
         }
     }
 
@@ -122,7 +122,7 @@ public class AiAnalysisController extends BaseController {
         if (result.isSuccess()) {
             return Result.success(result);
         } else {
-            return Result.error(result.getErrorMessage());
+            return Result.error(result.getError());
         }
     }
 

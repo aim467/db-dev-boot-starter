@@ -2,7 +2,7 @@ spring:
   application:
     name: db-dev-example
   datasource:
-    url: jdbc:mysql://192.168.1.188:3306/r_pan?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://192.168.1.188:3306/ys?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -25,6 +25,25 @@ spring:
       filters: stat,wall,slf4j  # 启用监控统计、SQL防火墙、日志
       connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
       use-global-data-source-stat: true
+      filter:
+        stat:
+          slow-sql-millis: 1
+          slow-sql-log-level: info
+          log-slow-sql: true
+      statViewServlet: # Druid监控页面配置
+        enabled: true # 启用Druid监控页面
+        login-username: root # 监控页面登录用户名
+        login-password: root # 监控页面登录密码
+        url-pattern: /druid/* # 监控页面的访问URL路径
+        reset-enable: true
+        allow: 127.0.0.1
+      web-stat-filter:
+        enabled: true
+        session-stat-enable: true
+        session-stat-max-count: 1000
+        url-pattern: /*
+
+
 
 db:
   dev:
@@ -44,3 +63,7 @@ server:
 logging:
   level:
     com.dbdev: DEBUG
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
