@@ -830,8 +830,7 @@ const renderMarkdown = (text) => {
 // 检查 AI 功能状态
 const checkAiStatus = async () => {
   try {
-    const res = await getAiStatus()
-    aiEnabled.value = res.data?.enabled || false
+    const res = false
   } catch (error) {
     console.error('检查 AI 状态失败:', error)
     aiEnabled.value = false

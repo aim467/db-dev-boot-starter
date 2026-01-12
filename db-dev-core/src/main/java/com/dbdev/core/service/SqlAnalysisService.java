@@ -1,11 +1,13 @@
 package com.dbdev.core.service;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * SQL分析服务 - 提供SQL执行计划和性能分析
@@ -13,6 +15,18 @@ import java.util.*;
 @Slf4j
 @Service
 public class SqlAnalysisService {
+
+    // 预编译的正则表达式，提升性能
+    private static final Pattern SINGLE_LINE_COMMENT_PATTERN = Pattern.compile("--.*$");
+    private static final Pattern MULTI_LINE_COMMENT_PATTERN = Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL);
+    private static final Pattern DANGEROUS_KEYWORDS_PATTERN = Pattern.compile(
+            "\\b(insert|update|delete|drop|create|alter|truncate|grant|revoke|exec|execute|sp_|xp_)\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    // SQL Server EXPLAIN 模板
+    private static final String SQLSERVER_EXPLAIN_TEMPLATE = "SET SHOWPLAN_TEXT ON; DECLARE @sql NVARCHAR(MAX) = ?; EXEC(@sql); SET SHOWPLAN_TEXT OFF;";
+
+    private static final int QUERY_TIMEOUT_SECONDS = 30;
 
     private final DataSourceService dataSourceService;
 
@@ -24,7 +38,7 @@ public class SqlAnalysisService {
      * 执行SQL分析
      *
      * @param dataSourceName 数据源名称
-     * @param sql SQL查询语句
+     * @param sql            SQL查询语句
      * @return 分析结果
      */
     public AnalysisResult analyzeQuery(String dataSourceName, String sql) {
@@ -76,7 +90,7 @@ public class SqlAnalysisService {
         String explainSql = buildExplainSql(sql, databaseType);
 
         try (Connection conn = dataSource.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(explainSql);
+             PreparedStatement stmt = prepareStatement(conn, explainSql, sql, databaseType);
              ResultSet rs = stmt.executeQuery()) {
 
             List<Map<String, Object>> explainResults = new ArrayList<>();
@@ -105,24 +119,39 @@ public class SqlAnalysisService {
     }
 
     /**
+     * 根据数据库类型准备PreparedStatement
+     */
+    private PreparedStatement prepareStatement(Connection conn, String explainSql, String sql, String databaseType)
+            throws SQLException {
+        if ("sqlserver".equals(databaseType)) {
+            PreparedStatement stmt = conn.prepareStatement(explainSql);
+            stmt.setString(1, sql);
+            stmt.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+            return stmt;
+        } else {
+            PreparedStatement stmt = conn.prepareStatement(explainSql);
+            stmt.setQueryTimeout(QUERY_TIMEOUT_SECONDS);
+            return stmt;
+        }
+    }
+
+    /**
      * 构建EXPLAIN SQL语句
      */
     private String buildExplainSql(String sql, String databaseType) {
+        String defaultSQL = "EXPLAIN " + sql;
         switch (databaseType) {
-            case "mysql":
-                // MySQL支持多种EXPLAIN格式
-                return "EXPLAIN " + sql;
             case "postgresql":
-                // PostgreSQL使用EXPLAIN (ANALYZE, FORMAT JSON)获取更详细信息
                 return "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) " + sql;
             case "oracle":
-                // Oracle使用EXPLAIN PLAN
                 return "EXPLAIN PLAN FOR " + sql;
             case "sqlserver":
-                // SQL Server使用SET SHOWPLAN_TEXT ON
-                return "SET SHOWPLAN_TEXT ON; GO; " + sql + "; GO; SET SHOWPLAN_TEXT OFF;";
+                // SQL Server 需要特殊处理，使用参数化方式避免 GO 分隔符问题
+                return SQLSERVER_EXPLAIN_TEMPLATE;
+            case "mysql":
+                return defaultSQL;
             default:
-                return "EXPLAIN " + sql;
+                return defaultSQL;
         }
     }
 
@@ -150,7 +179,7 @@ public class SqlAnalysisService {
                 String type = String.valueOf(row.get("type"));
                 if ("ALL".equals(type)) {
                     hasFullTableScan = true;
-                } else if ("index".equals(type) || "const".equals(type) || "eq_ref".equals(type)) {
+                } else if ("index".equals(type) || "const".equals(type) || "eq_ref".equals(type) || "ref".equals(type)) {
                     hasUsingIndex = true;
                 }
             }
@@ -190,8 +219,7 @@ public class SqlAnalysisService {
                     "high",
                     "检测到全表扫描",
                     "建议为查询条件中的字段添加索引，避免全表扫描以提升查询性能。",
-                    "CREATE INDEX idx_table_column ON table_name(column_name)"
-            ));
+                    "CREATE INDEX idx_table_column ON table_name(column_name)"));
         }
 
         if (!hasUsingIndex && !hasFullTableScan) {
@@ -199,8 +227,7 @@ public class SqlAnalysisService {
                     "medium",
                     "未使用索引",
                     "请检查查询条件字段是否已创建索引，可使用EXPLAIN查看索引使用情况。",
-                    "使用EXPLAIN ANALYZE查看详细的执行计划"
-            ));
+                    "使用EXPLAIN ANALYZE查看详细的执行计划"));
         }
 
         if (totalRows != null && totalRows > 10000) {
@@ -211,8 +238,7 @@ public class SqlAnalysisService {
                             "1. 添加合适的索引\n" +
                             "2. 使用分页查询限制返回行数\n" +
                             "3. 考虑使用覆盖索引",
-                    "SELECT * FROM table WHERE condition LIMIT 100"
-            ));
+                    "SELECT * FROM table WHERE condition LIMIT 100"));
         }
 
         if (totalCost != null && totalCost > 1000) {
@@ -220,8 +246,7 @@ public class SqlAnalysisService {
                     "low",
                     "高成本查询",
                     "查询成本为 " + String.format("%.2f", totalCost) + "，建议优化查询逻辑或添加索引。",
-                    null
-            ));
+                    null));
         }
 
         return suggestions;
@@ -235,17 +260,16 @@ public class SqlAnalysisService {
             return SqlValidationResult.invalid("SQL语句不能为空");
         }
 
-        String trimmedSql = sql.trim().toLowerCase(Locale.ROOT);
+        String trimmedSql = sql.trim();
 
         // 检查是否以注释开头
         if (trimmedSql.startsWith("--") || trimmedSql.startsWith("/*")) {
             return SqlValidationResult.invalid("不支持纯注释语句");
         }
 
-        // 移除注释
-        String cleanSql = trimmedSql.replaceAll("--.*$", "")
-                .replaceAll("/\\*.*?\\*/", "")
-                .trim();
+        // 移除注释（使用预编译的正则）
+        String cleanSql = SINGLE_LINE_COMMENT_PATTERN.matcher(trimmedSql).replaceAll("");
+        cleanSql = MULTI_LINE_COMMENT_PATTERN.matcher(cleanSql).replaceAll("").trim();
 
         // 检查是否为空
         if (cleanSql.isEmpty()) {
@@ -253,36 +277,38 @@ public class SqlAnalysisService {
         }
 
         // 检查是否为SELECT语句
-        if (!cleanSql.startsWith("select")) {
+        String lowerSql = cleanSql.toLowerCase(Locale.ROOT);
+        if (!lowerSql.startsWith("select")) {
             return SqlValidationResult.invalid("只允许执行SELECT查询语句的分析");
         }
 
-        // 检查是否包含危险关键词
-        String[] dangerousKeywords = {
-                "insert", "update", "delete", "drop", "create", "alter", "truncate",
-                "grant", "revoke", "exec", "execute", "sp_", "xp_"
-        };
-
-        for (String keyword : dangerousKeywords) {
-            if (cleanSql.contains(keyword)) {
-                return SqlValidationResult.invalid("SQL语句包含危险操作: " + keyword);
-            }
+        // 检查是否包含危险关键词（使用预编译的正则）
+        if (DANGEROUS_KEYWORDS_PATTERN.matcher(cleanSql).find()) {
+            String matchedKeyword = extractMatchedKeyword(DANGEROUS_KEYWORDS_PATTERN.matcher(cleanSql));
+            return SqlValidationResult.invalid("SQL语句包含危险操作: " + matchedKeyword);
         }
 
         return SqlValidationResult.valid();
     }
 
     /**
+     * 提取匹配到的危险关键词
+     */
+    private String extractMatchedKeyword(java.util.regex.Matcher matcher) {
+        matcher.pattern().pattern();
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return "未知危险操作";
+    }
+
+    /**
      * SQL验证结果
      */
+    @Data
     private static class SqlValidationResult {
         private final boolean valid;
         private final String errorMessage;
-
-        private SqlValidationResult(boolean valid, String errorMessage) {
-            this.valid = valid;
-            this.errorMessage = errorMessage;
-        }
 
         public static SqlValidationResult valid() {
             return new SqlValidationResult(true, null);
@@ -291,19 +317,12 @@ public class SqlAnalysisService {
         public static SqlValidationResult invalid(String errorMessage) {
             return new SqlValidationResult(false, errorMessage);
         }
-
-        public boolean isValid() {
-            return valid;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
     }
 
     /**
      * 分析结果
      */
+    @Data
     public static class AnalysisResult {
         private boolean success;
         private String message;
@@ -329,35 +348,16 @@ public class SqlAnalysisService {
             result.message = message;
             return result;
         }
-
-        // Getters
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public List<Map<String, Object>> getExplainData() { return explainData; }
-        public List<OptimizationSuggestion> getSuggestions() { return suggestions; }
-        public String getDatabaseType() { return databaseType; }
     }
 
     /**
      * 优化建议
      */
+    @Data
     public static class OptimizationSuggestion {
-        private String priority; // high, medium, low
-        private String title;
-        private String description;
-        private String example;
-
-        public OptimizationSuggestion(String priority, String title, String description, String example) {
-            this.priority = priority;
-            this.title = title;
-            this.description = description;
-            this.example = example;
-        }
-
-        // Getters
-        public String getPriority() { return priority; }
-        public String getTitle() { return title; }
-        public String getDescription() { return description; }
-        public String getExample() { return example; }
+        private final String priority; // high, medium, low
+        private final String title;
+        private final String description;
+        private final String example;
     }
 }

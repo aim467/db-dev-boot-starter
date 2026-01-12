@@ -34,5 +34,20 @@
             <version>1.18.30</version>
             <scope>provided</scope>
         </dependency>
+
+
+        <!-- Agents-Flex Spring Boot Starter -->
+        <dependency>
+            <groupId>com.agentsflex</groupId>
+            <artifactId>agents-flex-spring-boot-starter</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.agentsflex</groupId>
+            <artifactId>agents-flex-llm-deepseek</artifactId>
+            <version>1.2.0</version>
+        </dependency>
     </dependencies>
 </project>
