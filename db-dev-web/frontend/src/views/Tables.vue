@@ -79,7 +79,7 @@
       </template>
       <div v-loading="loadingTables">
         <el-empty v-if="!loadingTables && filteredTables.length === 0" description="未找到表" />
-        <el-table v-else :data="filteredTables" stripe style="width: 100%" height="400">
+        <el-table v-else :data="filteredTables" stripe style="width: 100%" :height="tableHeight">
           <el-table-column prop="tableName" label="表名" min-width="200" sortable>
             <template #default="scope">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { useDatasourceStore } from '@/stores/datasource'
 import { getTableList, getTableDetail } from '@/api/metadata'
@@ -140,6 +140,7 @@ const tables = ref([])
 const tableSearch = ref('')
 const loadingTables = ref(false)
 const selectedTable = ref(null)
+const tableHeight = ref(400)
 
 const getDatabaseTypeColor = (type) => {
   const typeMap = {
@@ -156,6 +157,12 @@ const filteredTables = computed(() => {
   const search = tableSearch.value.toLowerCase()
   return tables.value.filter(t => t.tableName.toLowerCase().includes(search))
 })
+
+const updateTableHeight = () => {
+  const minHeight = 400
+  const calculatedHeight = window.innerHeight - 320
+  tableHeight.value = Math.max(calculatedHeight, minHeight)
+}
 
 const loadTables = async () => {
   if (!selectedDataSource.value) return
@@ -195,6 +202,12 @@ onMounted(async () => {
   if (datasourceStore.dataSources.length === 0) {
     await datasourceStore.loadDataSources()
   }
+  updateTableHeight()
+  window.addEventListener('resize', updateTableHeight)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateTableHeight)
 })
 
 // 导出表结构文档
@@ -277,3 +290,4 @@ const handleExport = async (format) => {
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
 }
 </style>
+]]>
