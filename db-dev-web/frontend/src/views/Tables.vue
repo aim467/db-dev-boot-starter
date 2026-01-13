@@ -71,6 +71,10 @@
                     <el-icon><Document /></el-icon>
                     PDF 文档
                   </el-dropdown-item>
+                  <el-dropdown-item command="sql">
+                    <el-icon><Document /></el-icon>
+                    SQL 脚本
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -249,11 +253,11 @@ const handleExport = async (format) => {
       return
     }
 
-    // Markdown 或 HTML 导出
+    // Markdown, HTML 或 SQL 导出
     const res = await exportSchema(selectedDataSource.value, format)
 
     // 获取文件名
-    const contentDisposition = res.headers?.['content-disposition'] || res.headers?.Content-Disposition
+    const contentDisposition = res.headers?.['content-disposition'] || res.headers?.ContentDisposition
     let fileName = `schema_${selectedDataSource.value}_${Date.now()}`
     if (contentDisposition) {
       const match = contentDisposition.match(/filename="(.+)"/)
@@ -261,13 +265,26 @@ const handleExport = async (format) => {
         fileName = match[1]
       }
     }
-    if (!fileName.endsWith('.md') && !fileName.endsWith('.html')) {
-      fileName += format === 'markdown' ? '.md' : '.html'
+    if (!fileName.endsWith('.md') && !fileName.endsWith('.html') && !fileName.endsWith('.sql')) {
+      if (format === 'markdown') {
+        fileName += '.md'
+      } else if (format === 'sql') {
+        fileName += '.sql'
+      } else {
+        fileName += '.html'
+      }
     }
 
     // 创建下载链接
+    let mimeType = 'text/html'
+    if (format === 'markdown') {
+      mimeType = 'text/markdown'
+    } else if (format === 'sql') {
+      mimeType = 'text/sql'
+    }
+
     const blob = new Blob([res.data], {
-      type: format === 'markdown' ? 'text/markdown' : 'text/html'
+      type: mimeType
     })
     const link = document.createElement('a')
     link.href = window.URL.createObjectURL(blob)
