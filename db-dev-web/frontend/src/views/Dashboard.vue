@@ -255,9 +255,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useDatasourceStore } from '@/stores/datasource'
-import { getTableList } from '@/api/metadata'
+import {computed, onMounted, ref} from 'vue'
+import {useDatasourceStore} from '@/stores/datasource'
+import {getTableList} from '@/api/metadata'
 
 const datasourceStore = useDatasourceStore()
 const tableCount = ref(0)

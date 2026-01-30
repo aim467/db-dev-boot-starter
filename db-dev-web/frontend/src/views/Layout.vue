@@ -54,9 +54,9 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {computed, onMounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import request from '@/api/request'
 
 const route = useRoute()

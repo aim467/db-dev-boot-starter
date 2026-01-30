@@ -57,8 +57,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { checkDruidEnabled, getPoolStats } from '@/api/druid'
+import {onMounted, onUnmounted, ref, watch} from 'vue'
+import {checkDruidEnabled, getPoolStats} from '@/api/druid'
 import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
 

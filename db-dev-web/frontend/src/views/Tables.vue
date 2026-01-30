@@ -130,11 +130,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElLoading } from 'element-plus'
-import { useDatasourceStore } from '@/stores/datasource'
-import { getTableList, getTableDetail } from '@/api/metadata'
-import { exportSchema } from '@/api/export'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {ElLoading, ElMessage} from 'element-plus'
+import {useDatasourceStore} from '@/stores/datasource'
+import {getTableDetail, getTableList} from '@/api/metadata'
+import {exportSchema} from '@/api/export'
 import TableDetail from '@/components/TableDetail.vue'
 
 const datasourceStore = useDatasourceStore()

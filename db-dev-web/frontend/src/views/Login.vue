@@ -144,10 +144,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { User, Lock, Connection, Grid, Lightning, Tools } from '@element-plus/icons-vue'
+import {reactive, ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {Connection, Grid, Lightning, Lock, Tools, User} from '@element-plus/icons-vue'
 import request from '@/api/request'
 
 const router = useRouter()

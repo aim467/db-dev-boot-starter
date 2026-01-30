@@ -1,2 +1,3 @@
 com.dbdev.autoconfigure.DbDevAutoConfiguration
 com.dbdev.autoconfigure.druid.DruidAutoConfiguration
+com.dbdev.ai.config.AiAutoConfiguration

@@ -2,11 +2,15 @@ package com.dbdev.web.controller;
 
 import com.dbdev.core.model.DatabaseMetadata;
 import com.dbdev.core.model.TableMetadata;
+import com.dbdev.core.response.Result;
 import com.dbdev.core.service.DataSourceService;
 import com.dbdev.core.service.MetadataService;
-import com.dbdev.core.response.Result;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;

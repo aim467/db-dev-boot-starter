@@ -428,10 +428,10 @@
 
 <script setup>
 
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { useDatasourceStore } from '@/stores/datasource'
-import { executeSql, analyzeSql, getAiStatus, analyzeSqlWithAi } from '@/api/sql'
+import {onMounted, reactive, ref} from 'vue'
+import {ElMessage} from 'element-plus'
+import {useDatasourceStore} from '@/stores/datasource'
+import {analyzeSql, analyzeSqlWithAi, executeSql} from '@/api/sql'
 
 const datasourceStore = useDatasourceStore()
 

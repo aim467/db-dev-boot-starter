@@ -1,11 +1,17 @@
 package com.dbdev.core.service;
 
-import com.dbdev.core.model.*;
+import com.dbdev.core.model.ColumnMetadata;
+import com.dbdev.core.model.DatabaseMetadata;
+import com.dbdev.core.model.IndexMetadata;
+import com.dbdev.core.model.TableMetadata;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 

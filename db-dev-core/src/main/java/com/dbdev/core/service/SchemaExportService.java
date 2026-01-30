@@ -1,6 +1,9 @@
 package com.dbdev.core.service;
 
-import com.dbdev.core.model.*;
+import com.dbdev.core.model.ColumnMetadata;
+import com.dbdev.core.model.DatabaseMetadata;
+import com.dbdev.core.model.IndexMetadata;
+import com.dbdev.core.model.TableMetadata;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +17,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 数据库表结构导出服务
@@ -368,15 +376,6 @@ public class SchemaExportService {
             return type + "(" + col.getColumnSize() + ")";
         }
         return type;
-    }
-
-    private String escapeHtml(String text) {
-        if (text == null)
-            return null;
-        return text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
     }
 
     /**

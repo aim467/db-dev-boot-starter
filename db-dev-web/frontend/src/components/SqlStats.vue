@@ -142,8 +142,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { getSqlStats } from '@/api/druid'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
+import {getSqlStats} from '@/api/druid'
 
 const props = defineProps({
   autoRefresh: {

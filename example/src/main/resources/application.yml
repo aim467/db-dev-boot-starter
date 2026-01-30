@@ -56,6 +56,22 @@ db:
       enabled: false
       username: admin
       password: 123456
+    # AI 配置
+    ai:
+      enabled: false  # 默认关闭，需要时开启
+      provider: modelscope  # modelscope 或 deepseek
+      modelscope:
+        api-key: ${MODELSCOPE_API_KEY:}  # 从环境变量读取或在此配置
+        model: qwen-turbo  # 可选: qwen-turbo, qwen-plus, qwen-max
+        temperature: 0.7
+        max-tokens: 2000
+      deepseek:
+        api-key: ${DEEPSEEK_API_KEY:}
+        model: deepseek-chat
+        temperature: 0.7
+        max-tokens: 2000
+      timeout: 30
+      max-retries: 3
 
 server:
   port: 5555

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import axios from 'axios'
 
 // 从当前 URL 动态获取 basePath，适配任何 context-path + uiPath 配置
