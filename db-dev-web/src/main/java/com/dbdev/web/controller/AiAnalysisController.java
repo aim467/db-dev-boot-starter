@@ -4,7 +4,6 @@ import com.dbdev.core.model.TableMetadata;
 import com.dbdev.core.response.Result;
 import com.dbdev.core.service.ai.AiAnalysisResult;
 import com.dbdev.core.service.ai.AiAnalysisService;
-import com.dbdev.core.service.ai.impl.LocalAnalysisService;
 import com.dbdev.core.service.ai.impl.OpenAiAnalysisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,6 @@ public class AiAnalysisController extends BaseController {
 
     private final AiAnalysisService aiAnalysisService;
     private final OpenAiAnalysisService openAiAnalysisService;
-    private final LocalAnalysisService localAnalysisService;
 
     /**
      * 检查 AI 功能状态
@@ -35,7 +33,6 @@ public class AiAnalysisController extends BaseController {
         Map<String, Object> status = Map.of(
                 "enabled", aiAnalysisService.isEnabled(),
                 "openAiEnabled", openAiAnalysisService.isEnabled(),
-                "localEnabled", localAnalysisService.isEnabled(),
                 "type", openAiAnalysisService.isEnabled() ? "openai" : "local"
         );
         return Result.success(status);
@@ -59,8 +56,6 @@ public class AiAnalysisController extends BaseController {
         AiAnalysisResult result;
         if (openAiAnalysisService.isEnabled()) {
             result = openAiAnalysisService.analyzeSql(request.getSql(), request.getDatabaseType());
-        } else if (localAnalysisService.isEnabled()) {
-            result = localAnalysisService.analyzeSql(request.getSql(), request.getDatabaseType());
         } else {
             return Result.error("AI 功能未启用");
         }
@@ -86,8 +81,6 @@ public class AiAnalysisController extends BaseController {
         AiAnalysisResult result;
         if (openAiAnalysisService.isEnabled()) {
             result = openAiAnalysisService.analyzeExplain(request.getExplainData(), request.getDatabaseType());
-        } else if (localAnalysisService.isEnabled()) {
-            result = localAnalysisService.analyzeExplain(request.getExplainData(), request.getDatabaseType());
         } else {
             return Result.error("AI 功能未启用");
         }
@@ -113,8 +106,6 @@ public class AiAnalysisController extends BaseController {
         AiAnalysisResult result;
         if (openAiAnalysisService.isEnabled()) {
             result = openAiAnalysisService.analyzeTableStructure(request.getTables(), request.getDatabaseType());
-        } else if (localAnalysisService.isEnabled()) {
-            result = localAnalysisService.analyzeTableStructure(request.getTables(), request.getDatabaseType());
         } else {
             return Result.error("AI 功能未启用");
         }
