@@ -37,3 +37,5 @@ build/
 .specstory
 .trae
 .vscode
+
+/db-dev-web/src/main/resources/static/
