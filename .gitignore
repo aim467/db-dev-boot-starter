@@ -38,4 +38,5 @@ build/
 .trae
 .vscode
 
-/db-dev-web/src/main/resources/static/
+
+/db-dev-web/src/main/resources/static/db-dev/

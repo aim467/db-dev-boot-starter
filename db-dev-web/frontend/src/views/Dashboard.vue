@@ -157,7 +157,7 @@
         </el-card>
       </el-col>
 
-      <!-- 右侧信息 -->
+      <!-- 右侧信息：系统信息和项目信息 -->
       <el-col :xs="24" :lg="10">
         <!-- 系统信息 -->
         <el-card shadow="hover" class="content-card system-card">
