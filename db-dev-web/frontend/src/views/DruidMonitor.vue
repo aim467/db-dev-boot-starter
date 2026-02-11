@@ -30,7 +30,6 @@
           />
         </el-tab-pane>
 
-        <!-- SQL 统计 Tab -->
         <el-tab-pane name="sql">
           <template #label>
             <span>
@@ -43,6 +42,20 @@
             ref="sqlStatsRef"
             :auto-refresh="activeTab === 'sql'"
             @loaded="handleSqlStatsLoaded"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane name="url">
+          <template #label>
+            <span>
+              <el-icon><Link /></el-icon>
+              URL 统计
+            </span>
+          </template>
+
+          <UrlStats
+            ref="urlStatsRef"
+            :auto-refresh="activeTab === 'url'"
           />
         </el-tab-pane>
       </el-tabs>
@@ -61,6 +74,7 @@ import {onMounted, onUnmounted, ref, watch} from 'vue'
 import {checkDruidEnabled, getPoolStats} from '@/api/druid'
 import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
+import UrlStats from '@/components/UrlStats.vue'
 
 const loading = ref(true)
 const druidEnabled = ref(false)
@@ -68,6 +82,7 @@ const activeTab = ref('pool')
 const poolStats = ref(null)
 const poolLoading = ref(false)
 const sqlStatsRef = ref(null)
+const urlStatsRef = ref(null)
 
 let poolRefreshTimer = null
 
@@ -117,10 +132,12 @@ const startPoolRefresh = () => {
   }, 10000)
 }
 
-// 监听 Tab 切换
 watch(activeTab, (newTab) => {
   if (newTab === 'sql' && sqlStatsRef.value) {
     sqlStatsRef.value.refresh()
+  }
+  if (newTab === 'url' && urlStatsRef.value) {
+    urlStatsRef.value.refresh()
   }
 })
 

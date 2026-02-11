@@ -66,6 +66,18 @@ public class DruidMonitorController extends BaseController {
         }
     }
 
+    @GetMapping("/url-stats")
+    public Result<List<Map<String, Object>>> getUriStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getUrlStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get URI stats", e);
+            return Result.error("获取 URI 统计失败: " + e.getMessage());
+        }
+    }
+
+
     /**
      * 重置统计信息
      */
@@ -77,20 +89,6 @@ public class DruidMonitorController extends BaseController {
         } catch (Exception e) {
             log.error("Failed to reset stats", e);
             return Result.error("重置统计失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取 URL 统计信息
-     */
-    @GetMapping("/url-stats")
-    public Result<List<Map<String, Object>>> getUrlStats() {
-        try {
-            List<Map<String, Object>> stats = druidDataSourceProvider.getUrlStats();
-            return Result.success(stats);
-        } catch (Exception e) {
-            log.error("Failed to get URL stats", e);
-            return Result.error("获取 URL 统计失败: " + e.getMessage());
         }
     }
 }

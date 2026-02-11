@@ -82,7 +82,7 @@ public class DruidDataSourceProvider {
             try {
                 var sqlStatMap = druid.getDataSourceStat().getSqlStatMap();
                 if (sqlStatMap != null) {
-                    sqlStatMap.values().forEach(sqlStat -> {
+                    sqlStatMap.values().parallelStream().forEach(sqlStat -> {
                         Map<String, Object> stat = new LinkedHashMap<>();
                         stat.put("sql", sqlStat.getSql());
                         stat.put("executeCount", sqlStat.getExecuteCount());
@@ -107,6 +107,35 @@ public class DruidDataSourceProvider {
                 (Long) b.get("executeCount"), (Long) a.get("executeCount")));
         return sqlStatsList;
     }
+
+    /**
+     * 获取 url 访问信息
+     * @return URI统计信息列表
+     */
+    public List<Map<String, Object>> getUrlStats() {
+        List<Map<String, Object>> urlStatsList = new ArrayList<>();
+        try {
+            List<Map<String, Object>> uriStatData = WebAppStatManager.getInstance().getURIStatData();
+            if (uriStatData != null) {
+                uriStatData.parallelStream().forEach(uriStat -> {
+                    Map<String, Object> stat = new LinkedHashMap<>();
+                    stat.put("uri", uriStat.get("URI"));
+                    stat.put("requestCount", uriStat.get("RequestCount"));
+                    stat.put("requestTimeMillis", uriStat.get("RequestTimeMillis"));
+                    stat.put("runningCount", uriStat.get("RunningCount"));
+                    stat.put("concurrentMax", uriStat.get("ConcurrentMax"));
+                    stat.put("jdbcExecuteCount", uriStat.get("JdbcExecuteCount"));
+                    stat.put("jdbcExecuteErrorCount", uriStat.get("JdbcExecuteErrorCount"));
+                    stat.put("jdbcExecuteTimeMillis", uriStat.get("JdbcExecuteTimeMillis"));
+                    urlStatsList.add(stat);
+                });
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get URL stats: {}", e.getMessage());
+        }
+        return urlStatsList;
+    }
+
 
     /**
      * 获取 Druid 数据源
@@ -135,10 +164,5 @@ public class DruidDataSourceProvider {
         if (url == null) return null;
         // 掩码密码参数
         return url.replaceAll("password=[^&]*", "password=***");
-    }
-
-    public List<Map<String, Object>> getUrlStats() {
-        List<Map<String, Object>> uriStatData = WebAppStatManager.getInstance().getURIStatData();
-        return uriStatData;
     }
 }
