@@ -22,7 +22,7 @@
 - 🚀 **即插即用** - 添加依赖即可使用，零侵入式设计
 - 📊 **数据源管理** - 实时查看所有数据源和连接池状态
 - 🔍 **元数据浏览** - 可视化浏览数据库表、字段、索引等结构
-- 📈 **Druid 监控** - 深度集成 Druid 连接池监控，实时查看 SQL 统计和性能分析
+- 📈 **Druid 监控** - 深度集成 Druid 连接池监控，实时查看 SQL/URL 统计和性能分析
 - ⚡ **SQL 执行器** - 在线执行 SELECT 查询，支持结果导出、历史记录、SQL 分析
 - 🔧 **代码生成器** - 基于表结构生成 Entity、Mapper、XML、Repository 代码
 - 📦 **结构导出** - 支持导出数据库表结构为 Markdown、HTML、SQL 格式
@@ -63,7 +63,7 @@ Web UI 提供以下功能：
 - 📊 **Dashboard** - 系统概览和快速统计
 - 🔌 **数据源管理** - 查看所有数据源、连接状态、连接池监控
 - 📋 **表结构浏览** - 浏览数据库表、字段、索引，支持导出文档
-- 📈 **Druid 监控** - 连接池状态、SQL 执行统计、性能分析
+- 📈 **Druid 监控** - 连接池状态、SQL/URL 执行统计、性能分析
 - ⚡ **SQL 执行器** - 在线执行查询、查看结果、历史记录、SQL 分析
 - 🔧 **代码生成器** - 可视化配置生成实体类、Mapper、XML 等代码
 
@@ -86,6 +86,13 @@ Web UI 提供以下功能：
 **代码生成相关**
 - `POST /api/codegen/preview` - 预览生成代码
 - `POST /api/codegen/generate` - 生成并下载代码
+
+**Druid 监控相关**
+- `GET /api/druid/enabled` - 检查是否启用 Druid 监控
+- `GET /api/druid/pool-stats` - 获取连接池状态信息
+- `GET /api/druid/sql-stats` - 获取 SQL 执行统计
+- `GET /api/druid/url-stats` - 获取 URL 访问统计
+- `POST /api/druid/reset-stats` - 重置 Druid 统计数据
 
 **导出相关**
 - `GET /api/export/markdown?dataSourceName=xxx` - 导出 Markdown
