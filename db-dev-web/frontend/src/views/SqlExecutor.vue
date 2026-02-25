@@ -138,9 +138,15 @@
       
       <!-- EXPLAIN执行计划 -->
       <div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <el-icon color="#409eff"><List /></el-icon>
-          <span style="font-weight: 600;">EXPLAIN 执行计划</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <el-icon color="#409eff"><List /></el-icon>
+            <span style="font-weight: 600;">EXPLAIN 执行计划</span>
+          </div>
+          <el-button v-if="aiEnabled" type="warning" size="small" @click="aiAnalyzeExplain" :loading="aiAnalyzingExplain">
+            <el-icon><ChatDotRound /></el-icon>
+            AI 分析 EXPLAIN
+          </el-button>
         </div>
         <el-table
           :data="sqlAnalysisResult.explainData"
@@ -431,7 +437,7 @@
 import {onMounted, reactive, ref} from 'vue'
 import {ElMessage} from 'element-plus'
 import {useDatasourceStore} from '@/stores/datasource'
-import {analyzeSql, analyzeSqlWithAi, executeSql, getAiStatus} from '@/api/sql'
+import {analyzeSql, analyzeSqlWithAi, analyzeExplainWithAi, executeSql, getAiStatus} from '@/api/sql'
 
 const datasourceStore = useDatasourceStore()
 
@@ -444,6 +450,7 @@ const aiEnabled = ref(false)
 const executingSql = ref(false)
 const analyzingSql = ref(false)
 const aiAnalyzingSql = ref(false)
+const aiAnalyzingExplain = ref(false)
 
 const cellDataDialog = reactive({
   visible: false,
@@ -649,6 +656,38 @@ const aiAnalyzeSqlQuery = async () => {
     ElMessage.error('AI 分析失败: ' + error.message)
   } finally {
     aiAnalyzingSql.value = false
+  }
+}
+
+// AI EXPLAIN 分析
+const aiAnalyzeExplain = async () => {
+  if (!sqlAnalysisResult.value || !sqlAnalysisResult.value.explainData) {
+    ElMessage.warning('请先执行SQL分析以获取EXPLAIN数据')
+    return
+  }
+  
+  if (!Array.isArray(sqlAnalysisResult.value.explainData) || sqlAnalysisResult.value.explainData.length === 0) {
+    ElMessage.warning('EXPLAIN数据为空')
+    return
+  }
+  
+  aiAnalyzingExplain.value = true
+  try {
+    // 取第一条EXPLAIN记录进行分析（通常简单查询只有一条）
+    // 如果是复杂查询有多条，可以考虑合并或选择最重要的一条
+    const explainData = sqlAnalysisResult.value.explainData[0]
+    
+    const res = await analyzeExplainWithAi({
+      explainData: explainData,
+      databaseType: sqlAnalysisResult.value.databaseType || 'MySQL'
+    })
+    
+    aiAnalysisResult.value = res.data
+    ElMessage.success('AI EXPLAIN 分析完成')
+  } catch (error) {
+    ElMessage.error('AI EXPLAIN 分析失败: ' + error.message)
+  } finally {
+    aiAnalyzingExplain.value = false
   }
 }
 
