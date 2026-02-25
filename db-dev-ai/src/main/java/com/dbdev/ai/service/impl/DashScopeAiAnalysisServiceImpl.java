@@ -20,16 +20,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ModelScope AI分析服务实现
+ * DashScope AI分析服务实现
  */
 @Slf4j
-public class ModelScopeAiAnalysisServiceImpl implements AiAnalysisService {
+public class DashScopeAiAnalysisServiceImpl implements AiAnalysisService {
 
     private final AiProperties aiProperties;
     private final Generation generation;
     private final ObjectMapper objectMapper;
 
-    public ModelScopeAiAnalysisServiceImpl(AiProperties aiProperties) {
+    public DashScopeAiAnalysisServiceImpl(AiProperties aiProperties) {
         this.aiProperties = aiProperties;
         this.generation = new Generation();
         this.objectMapper = new ObjectMapper();

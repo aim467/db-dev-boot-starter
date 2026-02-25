@@ -58,10 +58,10 @@ db:
       password: 123456
     # AI 配置
     ai:
-      enabled: false  # 默认关闭，需要时开启
-      provider: modelscope  # modelscope 或 deepseek
+      enabled: true  # 默认关闭，需要时开启
+      provider: deepseek  # modelscope 或 deepseek
       modelscope:
-        api-key: ${MODELSCOPE_API_KEY:}  # 从环境变量读取或在此配置
+        api-key: ${DASHSCOPE_API_KEY:}  # 从环境变量读取或在此配置
         model: qwen-turbo  # 可选: qwen-turbo, qwen-plus, qwen-max
         temperature: 0.7
         max-tokens: 2000

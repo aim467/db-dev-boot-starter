@@ -5,8 +5,8 @@ import com.dbdev.ai.service.AiAnalysisService;
 import com.dbdev.core.model.TableMetadata;
 import com.dbdev.core.response.Result;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +19,11 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/ai")
-@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "db.dev.ai", name = "enabled", havingValue = "true")
 public class AiAnalysisController {
 
-    private final AiAnalysisService aiAnalysisService;
+    @Autowired
+    private AiAnalysisService aiAnalysisService;
 
     /**
      * 检查AI功能是否可用
@@ -31,7 +31,7 @@ public class AiAnalysisController {
     @GetMapping("/status")
     public Result<AiStatusResponse> getStatus() {
         boolean enabled = aiAnalysisService.isEnabled();
-        return Result.success(new AiStatusResponse(enabled, 
+        return Result.success(new AiStatusResponse(enabled,
                 enabled ? "AI功能已启用" : "AI功能未启用或未配置"));
     }
 
@@ -40,7 +40,7 @@ public class AiAnalysisController {
      */
     @PostMapping("/analyze/sql")
     public Result<AiAnalysisResult> analyzeSql(@RequestBody SqlAnalysisRequest request) {
-        log.info("收到SQL分析请求: databaseType={}, sql长度={}", 
+        log.info("收到SQL分析请求: databaseType={}, sql长度={}",
                 request.getDatabaseType(), request.getSql().length());
 
         if (request.getSql() == null || request.getSql().trim().isEmpty()) {
@@ -48,7 +48,7 @@ public class AiAnalysisController {
         }
 
         AiAnalysisResult result = aiAnalysisService.analyzeSql(
-                request.getSql(), 
+                request.getSql(),
                 request.getDatabaseType() != null ? request.getDatabaseType() : "MySQL"
         );
 
@@ -87,7 +87,7 @@ public class AiAnalysisController {
      */
     @PostMapping("/analyze/table")
     public Result<AiAnalysisResult> analyzeTable(@RequestBody TableAnalysisRequest request) {
-        log.info("收到表结构分析请求: databaseType={}, 表数量={}", 
+        log.info("收到表结构分析请求: databaseType={}, 表数量={}",
                 request.getDatabaseType(), request.getTables().size());
 
         if (request.getTables() == null || request.getTables().isEmpty()) {

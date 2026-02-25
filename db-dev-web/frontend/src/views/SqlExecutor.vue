@@ -431,7 +431,7 @@
 import {onMounted, reactive, ref} from 'vue'
 import {ElMessage} from 'element-plus'
 import {useDatasourceStore} from '@/stores/datasource'
-import {analyzeSql, analyzeSqlWithAi, executeSql} from '@/api/sql'
+import {analyzeSql, analyzeSqlWithAi, executeSql, getAiStatus} from '@/api/sql'
 
 const datasourceStore = useDatasourceStore()
 
@@ -830,7 +830,8 @@ const renderMarkdown = (text) => {
 // 检查 AI 功能状态
 const checkAiStatus = async () => {
   try {
-    const res = false
+    const res = await getAiStatus()
+    aiEnabled.value = res.data?.enabled || false
   } catch (error) {
     console.error('检查 AI 状态失败:', error)
     aiEnabled.value = false
