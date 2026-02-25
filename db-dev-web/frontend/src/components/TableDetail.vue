@@ -1,24 +1,33 @@
 <template>
-  <el-card shadow="hover">
-    <template #header>
-      <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <el-icon><Document /></el-icon>
-          <span style="font-weight: 600;">表详情: {{ table.tableName }}</span>
-          <el-tag v-if="table.tableType" type="info" size="small">{{ table.tableType }}</el-tag>
+  <div :class="{ 'drawer-mode': inDrawer }">
+    <el-card shadow="hover" :class="{ 'no-header-card': inDrawer }">
+      <template v-if="!inDrawer" #header>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <el-icon><Document /></el-icon>
+            <span style="font-weight: 600;">表详情: {{ table.tableName }}</span>
+            <el-tag v-if="table.tableType" type="info" size="small">{{ table.tableType }}</el-tag>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <el-button type="primary" size="small" @click="exportTableInfo">
+              <el-icon><Download /></el-icon>
+              导出
+            </el-button>
+            <el-button size="small" @click="$emit('close')">
+              <el-icon><Close /></el-icon>
+              关闭
+            </el-button>
+          </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-          <el-button type="primary" size="small" @click="exportTableInfo">
-            <el-icon><Download /></el-icon>
-            导出
-          </el-button>
-          <el-button size="small" @click="$emit('close')">
-            <el-icon><Close /></el-icon>
-            关闭
-          </el-button>
-        </div>
+      </template>
+
+      <!-- 抽屉模式下的工具栏 -->
+      <div v-if="inDrawer" style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+        <el-button type="primary" size="small" @click="copySql">
+          <el-icon><DocumentCopy /></el-icon>
+          复制 SQL
+        </el-button>
       </div>
-    </template>
 
     <el-tabs type="border-card">
       <el-tab-pane>
@@ -122,10 +131,7 @@
           <template #header>
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <span>CREATE TABLE 语句</span>
-              <el-button type="primary" size="small" @click="copySql">
-                <el-icon><DocumentCopy /></el-icon>
-                复制
-              </el-button>
+              <el-tag type="success" size="small">MySQL</el-tag>
             </div>
           </template>
           <el-input
@@ -139,6 +145,7 @@
       </el-tab-pane>
     </el-tabs>
   </el-card>
+  </div>
 </template>
 
 <script setup>
@@ -149,6 +156,10 @@ const props = defineProps({
   table: {
     type: Object,
     required: true
+  },
+  inDrawer: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -248,11 +259,17 @@ const exportTableInfo = () => {
 
 const copySql = () => {
   navigator.clipboard.writeText(generateCreateTableSql.value).then(() => {
-    ElMessage.success('SQL已复制到剪贴板')
+    ElMessage.success('SQL 已复制到剪贴板')
   }).catch(() => {
-    ElMessage.error('复制失败')
+    ElMessage.error('复制失败，请手动复制')
   })
 }
+
+// 暴露方法供父组件调用
+defineExpose({
+  copySql,
+  exportTableInfo
+})
 </script>
 
 <style scoped>
@@ -260,5 +277,22 @@ const copySql = () => {
   border: none;
   border-radius: 16px;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.drawer-mode .el-card {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.drawer-mode .no-header-card :deep(.el-card__header) {
+  display: none;
+}
+
+.drawer-mode :deep(.el-tabs--border-card) {
+  border-radius: 8px;
+}
+
+.drawer-mode :deep(.el-table) {
+  max-height: calc(100vh - 280px);
 }
 </style>

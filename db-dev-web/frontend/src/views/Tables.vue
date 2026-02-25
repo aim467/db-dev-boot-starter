@@ -121,11 +121,28 @@
       </div>
     </el-card>
 
-    <TableDetail 
-      v-if="selectedTable" 
-      :table="selectedTable" 
-      @close="selectedTable = null" 
-    />
+    <!-- 表详情抽屉 -->
+    <el-drawer
+      v-model="drawerVisible"
+      title="表详情"
+      direction="rtl"
+      size="55%"
+      :destroy-on-close="true"
+      @closed="handleDrawerClosed"
+    >
+      <template #header>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <el-icon><Document /></el-icon>
+          <span style="font-weight: 600;">表详情: {{ selectedTable?.tableName }}</span>
+          <el-tag v-if="selectedTable?.tableType" type="info" size="small">{{ selectedTable?.tableType }}</el-tag>
+        </div>
+      </template>
+      <TableDetail 
+        v-if="selectedTable" 
+        :table="selectedTable"
+        :in-drawer="true"
+      />
+    </el-drawer>
   </div>
 </template>
 
@@ -144,6 +161,7 @@ const tables = ref([])
 const tableSearch = ref('')
 const loadingTables = ref(false)
 const selectedTable = ref(null)
+const drawerVisible = ref(false)
 const tableHeight = ref(400)
 
 const getDatabaseTypeColor = (type) => {
@@ -194,12 +212,18 @@ const viewTableDetail = async (tableName) => {
   try {
     const res = await getTableDetail(tableName, selectedDataSource.value)
     selectedTable.value = res.data
+    drawerVisible.value = true
     ElMessage.success('加载表详情成功')
   } catch (error) {
     ElMessage.error('加载表详情失败: ' + error.message)
   } finally {
     loading.close()
   }
+}
+
+// 抽屉关闭时清理状态
+const handleDrawerClosed = () => {
+  selectedTable.value = null
 }
 
 onMounted(async () => {
