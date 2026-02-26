@@ -57,7 +57,7 @@ public class DbDevWebConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
 
         // 主页重定向 - 访问 /db-dev 时重定向到 /db-dev/
-        registry.addRedirectViewController(uiPath,  uiPath + "/index.html");
+        registry.addRedirectViewController(uiPath,  uiPath + "/dashboard");
 
         log.info("DB Dev UI view controller registered: {}", uiPath);
     }

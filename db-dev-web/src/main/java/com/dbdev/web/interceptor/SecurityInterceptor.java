@@ -1,4 +1,4 @@
-﻿package com.dbdev.web.interceptor;
+package com.dbdev.web.interceptor;
 
 
 import com.dbdev.core.response.Result;
