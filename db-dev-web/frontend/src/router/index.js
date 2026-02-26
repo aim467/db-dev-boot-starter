@@ -149,8 +149,7 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // 检查安全认证是否启用
-  // const isSecurityEnabled = await checkSecurityStatus()
-  const isSecurityEnabled = false;
+  const isSecurityEnabled = await checkSecurityStatus()
   
   // 如果安全认证未启用，直接通过
   if (!isSecurityEnabled) {

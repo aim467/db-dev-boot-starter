@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -190,5 +191,19 @@ public class DataSourceService {
      */
     public DataSource getDataSource(String name) {
         return applicationContext.getBean(name, DataSource.class);
+    }
+
+    /**
+     * 测试数据源连接
+     * @param name 数据源名称
+     */
+    public boolean testConnection(String name) {
+        DataSource dataSource = getDataSource(name);
+        try (Connection connection = dataSource.getConnection()) {
+            return connection != null && !connection.isClosed();
+        } catch (SQLException e) {
+            log.warn("Data source connection test failed: {}", name, e);
+            return false;
+        }
     }
 }

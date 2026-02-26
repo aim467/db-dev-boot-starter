@@ -1,4 +1,4 @@
-package com.dbdev.web.interceptor;
+﻿package com.dbdev.web.interceptor;
 
 
 import com.dbdev.core.response.Result;
@@ -15,6 +15,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 /**
  * 安全拦截器
@@ -23,6 +24,11 @@ import java.nio.charset.StandardCharsets;
 @Component
 @RequiredArgsConstructor
 public class SecurityInterceptor implements HandlerInterceptor {
+    private static final Set<String> PUBLIC_AUTH_ENDPOINTS = Set.of(
+            "/api/auth/login",
+            "/api/auth/validate",
+            "/api/auth/security-status"
+    );
     
     private final TokenService tokenService;
 
@@ -40,11 +46,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
         
         String path = request.getRequestURI();
         
-        // 排除登录接口、安全状态接口和静态资源
-        if (path.contains("/api/auth/login") || 
-            path.contains("/api/auth/validate") ||
-            path.contains("/api/auth/security-status") ||
-            !path.contains("/api/")) {
+        //  检查是否为公共认证端点
+        if (isPublicAuthEndpoint(path)) {
             return true;
         }
         
@@ -52,24 +55,28 @@ public class SecurityInterceptor implements HandlerInterceptor {
         String authHeader = request.getHeader("Authorization");
         
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return sendUnauthorizedResponse(response, "未提供认证Token");
+            return sendUnauthorizedResponse(response, "未授权的请求");
         }
         
         String token = authHeader.substring(7);
         
         // 验证Token
         if (!tokenService.validateToken(token)) {
-            return sendUnauthorizedResponse(response, "Token无效或已过期");
+            return sendUnauthorizedResponse(response, "无效的Token");
         }
         
-        // 刷新Token过期时间
+        // 刷新Token有效期
         tokenService.refreshToken(token);
         
         return true;
     }
+
+    private boolean isPublicAuthEndpoint(String path) {
+        return PUBLIC_AUTH_ENDPOINTS.stream().anyMatch(path::endsWith);
+    }
     
     /**
-     * 发送未授权响应
+     *
      */
     private boolean sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -86,4 +93,6 @@ public class SecurityInterceptor implements HandlerInterceptor {
         return false;
     }
 }
+
+
 

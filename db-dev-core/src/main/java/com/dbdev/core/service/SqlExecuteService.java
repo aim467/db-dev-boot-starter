@@ -1,6 +1,7 @@
-package com.dbdev.core.service;
+﻿package com.dbdev.core.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,12 @@ import java.util.Map;
 public class SqlExecuteService {
 
     private final DataSourceService dataSourceService;
+    
+    @Value("${db.dev.sql.max-rows:500}")
+    private int maxRows;
+    
+    @Value("${db.dev.sql.timeout:30}")
+    private int queryTimeoutSeconds;
 
     public SqlExecuteService(DataSourceService dataSourceService) {
         this.dataSourceService = dataSourceService;
@@ -60,6 +67,7 @@ public class SqlExecuteService {
         try {
             connection = DataSourceUtils.getConnection(dataSource);
             preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setQueryTimeout(queryTimeoutSeconds);
 
             // 设置参数
             if (params != null) {
@@ -85,7 +93,7 @@ public class SqlExecuteService {
             // 获取数据
             List<Map<String, Object>> rows = new ArrayList<>();
             int rowCount = 0;
-            while (resultSet.next() && rowCount < 1000) { // 限制最多1000行
+            while (resultSet.next() && rowCount < maxRows) {
                 Map<String, Object> row = new LinkedHashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);
