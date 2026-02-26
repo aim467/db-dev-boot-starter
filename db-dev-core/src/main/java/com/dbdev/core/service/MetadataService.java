@@ -8,12 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 数据库元数据服务
@@ -184,5 +182,113 @@ public class MetadataService {
         }
 
         return primaryKeys;
+    }
+
+    /**
+     * 创建表
+     */
+    public void createTable(DataSource dataSource, TableMetadata tableMetadata) throws SQLException {
+        if (tableMetadata == null) {
+            throw new SQLException("Table metadata must not be null");
+        }
+        if (tableMetadata.getTableName() == null || tableMetadata.getTableName().trim().isEmpty()) {
+            throw new SQLException("Table name must not be empty");
+        }
+        if (tableMetadata.getColumns() == null || tableMetadata.getColumns().isEmpty()) {
+            throw new SQLException("Table must have at least one column");
+        }
+
+        try (Connection connection = dataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+
+            String productName = connection.getMetaData().getDatabaseProductName();
+            boolean isMySql = productName != null
+                    && productName.toLowerCase(Locale.ROOT).contains("mysql");
+
+            List<String> columnDefinitions = new ArrayList<>();
+            List<String> primaryKeys = new ArrayList<>();
+
+            for (ColumnMetadata column : tableMetadata.getColumns()) {
+                if (column.getColumnName() == null || column.getColumnName().trim().isEmpty()) {
+                    throw new SQLException("Column name must not be empty");
+                }
+
+                StringBuilder columnDef = new StringBuilder();
+                columnDef.append(quoteIdentifier(column.getColumnName(), isMySql))
+                        .append(" ")
+                        .append(buildColumnType(column));
+
+                if (!column.isNullable()) {
+                    columnDef.append(" NOT NULL");
+                }
+
+                if (column.getDefaultValue() != null && !column.getDefaultValue().isEmpty()) {
+                    columnDef.append(" DEFAULT ").append(column.getDefaultValue());
+                }
+
+                if (column.isAutoIncrement() && isMySql) {
+                    columnDef.append(" AUTO_INCREMENT");
+                }
+
+                columnDefinitions.add(columnDef.toString());
+
+                if (column.isPrimaryKey()) {
+                    primaryKeys.add(quoteIdentifier(column.getColumnName(), isMySql));
+                }
+            }
+
+            if (!primaryKeys.isEmpty()) {
+                columnDefinitions.add("PRIMARY KEY (" + String.join(", ", primaryKeys) + ")");
+            }
+
+            StringBuilder sql = new StringBuilder();
+            sql.append("CREATE TABLE ")
+                    .append(quoteIdentifier(tableMetadata.getTableName(), isMySql))
+                    .append(" (")
+                    .append(String.join(", ", columnDefinitions))
+                    .append(")");
+
+            if (tableMetadata.getRemarks() != null
+                    && !tableMetadata.getRemarks().trim().isEmpty()
+                    && isMySql) {
+                sql.append(" COMMENT '")
+                        .append(tableMetadata.getRemarks().replace("'", "''"))
+                        .append("'");
+            }
+
+            String createSql = sql.toString();
+            log.info("Creating table with SQL: {}", createSql);
+            statement.executeUpdate(createSql);
+        }
+    }
+
+    private String buildColumnType(ColumnMetadata column) {
+        String typeName = column.getTypeName();
+        if (typeName == null || typeName.trim().isEmpty()) {
+            typeName = column.getDataType();
+        }
+        if (typeName == null || typeName.trim().isEmpty()) {
+            typeName = "VARCHAR";
+        }
+        typeName = typeName.toUpperCase(Locale.ROOT);
+
+        Integer size = column.getColumnSize();
+        Integer scale = column.getDecimalDigits();
+
+        if (size != null && size > 0) {
+            if (scale != null && scale > 0) {
+                return typeName + "(" + size + "," + scale + ")";
+            }
+            return typeName + "(" + size + ")";
+        }
+
+        return typeName;
+    }
+
+    private String quoteIdentifier(String identifier, boolean isMySql) {
+        if (isMySql) {
+            return "`" + identifier.replace("`", "``") + "`";
+        }
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
 }
