@@ -22,7 +22,7 @@ import java.sql.SQLException;
 @RestController
 @RequestMapping("/api/export")
 @RequiredArgsConstructor
-public class ExportController extends BaseController {
+public class ExportController {
 
     private final SchemaExportService schemaExportService;
 

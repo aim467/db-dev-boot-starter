@@ -22,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/druid")
 @RequiredArgsConstructor
-public class DruidMonitorController extends BaseController {
+public class DruidMonitorController {
 
     @Autowired
     private DruidDataSourceProvider druidDataSourceProvider;

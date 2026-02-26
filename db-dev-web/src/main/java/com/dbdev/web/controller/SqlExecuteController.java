@@ -19,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/sql")
 @RequiredArgsConstructor
-public class SqlExecuteController extends BaseController {
+public class SqlExecuteController {
 
     private final SqlExecuteService sqlExecuteService;
     private final SqlAnalysisService sqlAnalysisService;

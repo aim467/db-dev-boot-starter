@@ -14,7 +14,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
-public class IndexController extends BaseController {
+public class IndexController {
 
     @GetMapping("/info")
     public Map<String, Object> info() {

@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/datasource")
 @RequiredArgsConstructor
-public class DataSourceController extends BaseController {
+public class DataSourceController {
     
     private final DataSourceService dataSourceService;
     private final PoolStatsService poolStatsService;

@@ -23,7 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController extends BaseController {
+public class AuthController {
 
     private final TokenService tokenService;
 

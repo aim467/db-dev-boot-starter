@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/metadata")
 @RequiredArgsConstructor
-public class MetadataController extends BaseController {
+public class MetadataController {
 
     private final MetadataService metadataService;
     private final DataSourceService dataSourceService;
