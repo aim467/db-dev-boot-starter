@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,11 +14,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/")
 public class IndexController {
-
-    @GetMapping("/info")
-    public Map<String, Object> info() {
-        return buildSystemInfo();
-    }
 
     @GetMapping("/api/system/info")
     public Result<Map<String, Object>> systemInfo() {
@@ -39,7 +33,6 @@ public class IndexController {
         info.put("osName", System.getProperty("os.name"));
         info.put("osArch", System.getProperty("os.arch"));
         info.put("userTimezone", System.getProperty("user.timezone"));
-        info.put("currentTime", LocalDateTime.now().toString());
         return info;
     }
 }
