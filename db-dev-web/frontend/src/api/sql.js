@@ -42,7 +42,7 @@ export const analyzeExplainWithAi = (data) => {
 
 export const analyzeTablesWithAi = (data) => {
   return request({
-    url: '/ai/analyze/tables',
+    url: '/ai/analyze/table',
     method: 'post',
     data
   })

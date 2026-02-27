@@ -185,7 +185,7 @@
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus'
+import {ElMessage} from 'element-plus'
 
 const props = defineProps({
   poolStats: {

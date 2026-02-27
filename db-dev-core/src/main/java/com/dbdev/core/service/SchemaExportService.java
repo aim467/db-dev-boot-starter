@@ -1,6 +1,9 @@
 package com.dbdev.core.service;
 
-import com.dbdev.core.model.*;
+import com.dbdev.core.model.ColumnMetadata;
+import com.dbdev.core.model.DatabaseMetadata;
+import com.dbdev.core.model.IndexMetadata;
+import com.dbdev.core.model.TableMetadata;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +17,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 数据库表结构导出服务
@@ -31,6 +39,122 @@ public class SchemaExportService {
         this.freeMarkerConfiguration = new Configuration(Configuration.VERSION_2_3_32);
         this.freeMarkerConfiguration.setClassForTemplateLoading(this.getClass(), "/templates");
         this.freeMarkerConfiguration.setDefaultEncoding("UTF-8");
+    }
+
+    /**
+     * 导出为 SQL 格式（CREATE TABLE 语句）
+     */
+    public String exportToSql(String dataSourceName) throws SQLException {
+        DataSource dataSource = dataSourceService.getDataSource(dataSourceName);
+        DatabaseMetadata metadata = getFullMetadata(dataSource);
+
+        StringBuilder sb = new StringBuilder();
+
+        // 文件头注释
+        sb.append("-- ========================================\n");
+        sb.append("-- 数据库表结构导出\n");
+        sb.append("-- ========================================\n");
+        sb.append("-- 数据库: ").append(metadata.getProductName()).append(" ")
+                .append(metadata.getProductVersion()).append("\n");
+        sb.append("-- 数据库名: ").append(metadata.getDatabaseName()).append("\n");
+        sb.append("-- 生成时间: ")
+                .append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+                .append("\n");
+        sb.append("-- 表数量: ").append(metadata.getTables().size()).append("\n");
+        sb.append("-- ========================================\n\n");
+
+        // 导出每个表的 CREATE TABLE 语句
+        for (TableMetadata table : metadata.getTables()) {
+            sb.append("-- ----------------------------------------\n");
+            sb.append("-- 表名: ").append(table.getTableName());
+            if (table.getRemarks() != null && !table.getRemarks().isEmpty()) {
+                sb.append(" (").append(table.getRemarks()).append(")");
+            }
+            sb.append("\n");
+            sb.append("-- ----------------------------------------\n\n");
+
+            sb.append("DROP TABLE IF EXISTS `").append(table.getTableName()).append("`;\n");
+            sb.append("CREATE TABLE `").append(table.getTableName()).append("` (\n");
+
+            // 字段定义
+            List<String> columnDefinitions = new ArrayList<>();
+            if (table.getColumns() != null) {
+                for (ColumnMetadata col : table.getColumns()) {
+                    StringBuilder colDef = new StringBuilder();
+                    colDef.append("  `").append(col.getColumnName()).append("` ");
+                    colDef.append(formatSqlColumnType(col));
+
+                    // 非空约束
+                    if (!col.isNullable()) {
+                        colDef.append(" NOT NULL");
+                    }
+
+                    // 默认值
+                    if (col.getDefaultValue() != null && !col.getDefaultValue().isEmpty()) {
+                        colDef.append(" DEFAULT ").append(col.getDefaultValue());
+                    }
+
+                    // 自增
+                    if (col.isAutoIncrement()) {
+                        colDef.append(" AUTO_INCREMENT");
+                    }
+
+                    // 注释
+                    if (col.getRemarks() != null && !col.getRemarks().isEmpty()) {
+                        colDef.append(" COMMENT '").append(escapeSql(col.getRemarks())).append("'");
+                    }
+
+                    columnDefinitions.add(colDef.toString());
+                }
+            }
+
+            // 主键约束
+            if (table.getPrimaryKeys() != null && !table.getPrimaryKeys().isEmpty()) {
+                StringBuilder pkDef = new StringBuilder();
+                pkDef.append("  PRIMARY KEY (");
+                pkDef.append(String.join(", ", table.getPrimaryKeys().stream()
+                        .map(pk -> "`" + pk + "`")
+                        .toList()));
+                pkDef.append(")");
+                columnDefinitions.add(pkDef.toString());
+            }
+
+            sb.append(String.join(",\n", columnDefinitions));
+            sb.append("\n");
+
+            // 表注释
+            if (table.getRemarks() != null && !table.getRemarks().isEmpty()) {
+                sb.append(") COMMENT='").append(escapeSql(table.getRemarks())).append("';\n\n");
+            } else {
+                sb.append(");\n\n");
+            }
+
+            // 索引
+            if (table.getIndexes() != null && !table.getIndexes().isEmpty()) {
+                Map<String, List<IndexMetadata>> indexMap = new LinkedHashMap<>();
+                for (IndexMetadata idx : table.getIndexes()) {
+                    indexMap.computeIfAbsent(idx.getIndexName(), k -> new ArrayList<>()).add(idx);
+                }
+
+                for (Map.Entry<String, List<IndexMetadata>> entry : indexMap.entrySet()) {
+                    List<String> cols = entry.getValue().stream()
+                            .map(IndexMetadata::getColumnName)
+                            .filter(Objects::nonNull)
+                            .toList();
+
+                    if (!cols.isEmpty() && !entry.getKey().equals("PRIMARY")) {
+                        String indexType = entry.getValue().get(0).isUnique() ? "UNIQUE INDEX" : "INDEX";
+                        sb.append("CREATE ").append(indexType).append(" `").append(entry.getKey())
+                                .append("` ON `").append(table.getTableName()).append("` (");
+                        sb.append(String.join(", ", cols.stream().map(c -> "`" + c + "`").toList()));
+                        sb.append(");\n");
+                    }
+                }
+                sb.append("\n");
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -254,12 +378,31 @@ public class SchemaExportService {
         return type;
     }
 
-    private String escapeHtml(String text) {
+    /**
+     * 格式化 SQL 列类型
+     */
+    private String formatSqlColumnType(ColumnMetadata col) {
+        String type = col.getTypeName().toUpperCase();
+        if (col.getColumnSize() > 0 && col.getColumnSize() < 10000) {
+            if (col.getDecimalDigits() != null && col.getDecimalDigits() > 0) {
+                return type + "(" + col.getColumnSize() + "," + col.getDecimalDigits() + ")";
+            }
+            return type + "(" + col.getColumnSize() + ")";
+        }
+        return type;
+    }
+
+    /**
+     * SQL 字符串转义
+     */
+    private String escapeSql(String text) {
         if (text == null)
             return null;
-        return text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;");
+        return text.replace("\\", "\\\\")
+                .replace("'", "\\'")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

@@ -175,10 +175,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElLoading } from 'element-plus'
-import { useDatasourceStore } from '@/stores/datasource'
-import { testConnection as testConnectionApi, getPoolStats } from '@/api/datasource'
+import {onMounted, onUnmounted, ref} from 'vue'
+import {ElLoading, ElMessage} from 'element-plus'
+import {useDatasourceStore} from '@/stores/datasource'
+import {getPoolStats, testConnection as testConnectionApi} from '@/api/datasource'
 
 const datasourceStore = useDatasourceStore()
 

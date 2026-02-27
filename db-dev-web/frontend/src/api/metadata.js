@@ -15,3 +15,12 @@ export const getTableDetail = (tableName, dataSourceName) => {
     params: { dataSourceName }
   })
 }
+
+export const createTable = (dataSourceName, payload) => {
+  return request({
+    url: '/metadata/table',
+    method: 'post',
+    params: { dataSourceName },
+    data: payload
+  })
+}

@@ -5,7 +5,10 @@ import com.dbdev.core.response.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/druid")
 @RequiredArgsConstructor
-public class DruidMonitorController extends BaseController {
+public class DruidMonitorController {
 
     @Autowired
     private DruidDataSourceProvider druidDataSourceProvider;
@@ -63,6 +66,18 @@ public class DruidMonitorController extends BaseController {
         }
     }
 
+    @GetMapping("/url-stats")
+    public Result<List<Map<String, Object>>> getUriStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getUrlStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get URI stats", e);
+            return Result.error("获取 URI 统计失败: " + e.getMessage());
+        }
+    }
+
+
     /**
      * 重置统计信息
      */
@@ -74,20 +89,6 @@ public class DruidMonitorController extends BaseController {
         } catch (Exception e) {
             log.error("Failed to reset stats", e);
             return Result.error("重置统计失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取 URL 统计信息
-     */
-    @GetMapping("/url-stats")
-    public Result<List<Map<String, Object>>> getUrlStats() {
-        try {
-            List<Map<String, Object>> stats = druidDataSourceProvider.getUrlStats();
-            return Result.success(stats);
-        } catch (Exception e) {
-            log.error("Failed to get URL stats", e);
-            return Result.error("获取 URL 统计失败: " + e.getMessage());
         }
     }
 }

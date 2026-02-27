@@ -33,3 +33,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+.qoder
+.specstory
+.trae
+.vscode
+
+
+/db-dev-web/src/main/resources/static/db-dev/

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 import axios from 'axios'
 
 // 从当前 URL 动态获取 basePath，适配任何 context-path + uiPath 配置
@@ -149,8 +149,7 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // 检查安全认证是否启用
-  // const isSecurityEnabled = await checkSecurityStatus()
-  const isSecurityEnabled = false;
+  const isSecurityEnabled = await checkSecurityStatus()
   
   // 如果安全认证未启用，直接通过
   if (!isSecurityEnabled) {

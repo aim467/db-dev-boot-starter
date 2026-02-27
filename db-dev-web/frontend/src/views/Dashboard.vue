@@ -157,7 +157,7 @@
         </el-card>
       </el-col>
 
-      <!-- 右侧信息 -->
+      <!-- 右侧信息：系统信息和项目信息 -->
       <el-col :xs="24" :lg="10">
         <!-- 系统信息 -->
         <el-card shadow="hover" class="content-card system-card">
@@ -167,18 +167,52 @@
                 <el-icon color="#67c23a"><InfoFilled /></el-icon>
                 <span>系统信息</span>
               </div>
+              <el-button type="primary" text size="small" @click="loadSystemInfo" :loading="systemLoading">
+                <el-icon><Refresh /></el-icon>
+                刷新
+              </el-button>
             </div>
           </template>
-          <el-descriptions :column="2" size="small" border>
-            <el-descriptions-item label="版本">v{{ projectVersion }}</el-descriptions-item>
-            <el-descriptions-item label="环境">
-              <el-tag size="small" type="success">{{ projectEnv }}</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="前端框架">Vue 3</el-descriptions-item>
-            <el-descriptions-item label="UI 组件">Element Plus</el-descriptions-item>
-            <el-descriptions-item label="Java 版本">17+</el-descriptions-item>
-            <el-descriptions-item label="Spring Boot">3.2.x</el-descriptions-item>
-          </el-descriptions>
+          <div v-loading="systemLoading">
+            <el-empty v-if="!systemLoading && !systemInfo" description="暂无系统信息" />
+            <el-descriptions v-else-if="systemInfo" :column="2" size="small" border>
+              <el-descriptions-item label="应用名称">
+                {{ systemInfo.name }}
+              </el-descriptions-item>
+              <el-descriptions-item label="应用版本">
+                <el-tag size="small" type="info">{{ systemInfo.version }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="运行状态">
+                <el-tag size="small" :type="systemInfo.status === 'running' ? 'success' : 'danger'">
+                  {{ systemInfo.status }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="当前时间">
+                {{ systemInfo.currentTime }}
+              </el-descriptions-item>
+              <el-descriptions-item label="Spring Boot 版本">
+                <el-tag size="small" type="success">{{ systemInfo.springBootVersion }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="Java 版本">
+                <el-tag size="small" type="warning">{{ systemInfo.javaVersion }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="JDK 提供商">
+                {{ systemInfo.javaVendor }}
+              </el-descriptions-item>
+              <el-descriptions-item label="JVM 名称">
+                {{ systemInfo.jvmName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="操作系统">
+                {{ systemInfo.osName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="架构">
+                {{ systemInfo.osArch }}
+              </el-descriptions-item>
+              <el-descriptions-item label="时区">
+                {{ systemInfo.userTimezone }}
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
         </el-card>
 
         <!-- 功能特性 -->
@@ -255,16 +289,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useDatasourceStore } from '@/stores/datasource'
-import { getTableList } from '@/api/metadata'
+import {computed, onMounted, ref} from 'vue'
+import {useDatasourceStore} from '@/stores/datasource'
+import {getTableList} from '@/api/metadata'
+import {getSystemInfo} from '@/api/system'
 
 const datasourceStore = useDatasourceStore()
 const tableCount = ref(0)
 
-// 项目版本和环境
-const projectVersion = '1.0.0'
-const projectEnv = 'Development'
+const systemInfo = ref(null)
+const systemLoading = ref(false)
 
 const sqlHistoryCount = computed(() => {
   try {
@@ -297,6 +331,18 @@ const getDbTagType = (type) => {
   return types[type?.toLowerCase()] || 'info'
 }
 
+const loadSystemInfo = async () => {
+  systemLoading.value = true
+  try {
+    const res = await getSystemInfo()
+    systemInfo.value = res.data || null
+  } catch (e) {
+    console.error('加载系统信息失败', e)
+  } finally {
+    systemLoading.value = false
+  }
+}
+
 const loadData = async () => {
   try {
     await datasourceStore.loadDataSources()
@@ -312,6 +358,7 @@ const loadData = async () => {
 
 onMounted(() => {
   loadData()
+  loadSystemInfo()
 })
 </script>
 

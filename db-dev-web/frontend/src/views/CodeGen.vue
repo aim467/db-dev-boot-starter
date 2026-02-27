@@ -232,11 +232,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getDatasourceList } from '@/api/datasource'
-import { getTableList, getTableDetail } from '@/api/metadata'
-import { generate, preview, getDownloadUrl } from '@/api/codegen'
+import {computed, reactive, ref} from 'vue'
+import {ElMessage} from 'element-plus'
+import {getDatasourceList} from '@/api/datasource'
+import {getTableDetail, getTableList} from '@/api/metadata'
+import {generate, preview} from '@/api/codegen'
 
 const formRef = ref()
 const dataSources = ref([])

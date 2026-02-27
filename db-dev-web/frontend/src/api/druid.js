@@ -21,6 +21,10 @@ export function getSqlStats() {
   return request.get('/druid/sql-stats')
 }
 
+export function getUrlStats() {
+  return request.get('/druid/url-stats')
+}
+
 /**
  * 重置统计信息
  */

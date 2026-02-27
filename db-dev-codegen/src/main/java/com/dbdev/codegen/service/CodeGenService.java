@@ -12,11 +12,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
-import java.io.*;
-import java.nio.file.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -237,7 +245,7 @@ public class CodeGenService {
 
                 ZipEntry zipEntry = new ZipEntry(entryPath);
                 zos.putNextEntry(zipEntry);
-                zos.write(content.getBytes("UTF-8"));
+                zos.write(content.getBytes(StandardCharsets.UTF_8));
                 zos.closeEntry();
             }
         }

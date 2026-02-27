@@ -22,10 +22,12 @@
 - 🚀 **即插即用** - 添加依赖即可使用，零侵入式设计
 - 📊 **数据源管理** - 实时查看所有数据源和连接池状态
 - 🔍 **元数据浏览** - 可视化浏览数据库表、字段、索引等结构
-- ⚡ **SQL 执行器** - 在线执行 SQL 并查看结果（即将推出）
-- 🔧 **代码生成** - 基于表结构生成 Entity、Mapper 等代码（即将推出）
-- 🎨 **现代化 UI** - 基于 Vue 3 的响应式 Web 界面
-- 🔒 **安全优先** - 默认只读模式，支持访问控制
+- 📈 **Druid 监控** - 深度集成 Druid 连接池监控，实时查看 SQL/URL 统计和性能分析
+- ⚡ **SQL 执行器** - 在线执行 SELECT 查询，支持结果导出、历史记录、SQL 分析
+- 🔧 **代码生成器** - 基于表结构生成 Entity、Mapper、XML、Repository 代码
+- 📦 **结构导出** - 支持导出数据库表结构为 Markdown、HTML、SQL 格式
+- 🎨 **现代化 UI** - 基于 Vue 3 + Element Plus 的响应式 Web 界面
+- 🔒 **安全优先** - SQL 执行器仅支持只读查询，保障数据安全
 
 ## 快速开始
 
@@ -58,18 +60,44 @@ http://localhost:8080/db-dev
 ```
 
 Web UI 提供以下功能：
-- 📊 **Dashboard** - 快速概览
-- 🔌 **数据源管理** - 查看所有数据源和连接状态
-- 📋 **表结构浏览** - 浏览数据库表、字段、索引等元数据
-- ⚡ **SQL 执行器** - 即将推出
-- 🔧 **代码生成** - 即将推出
+- 📊 **Dashboard** - 系统概览和快速统计
+- 🔌 **数据源管理** - 查看所有数据源、连接状态、连接池监控
+- 📋 **表结构浏览** - 浏览数据库表、字段、索引，支持导出文档
+- 📈 **Druid 监控** - 连接池状态、SQL/URL 执行统计、性能分析
+- ⚡ **SQL 执行器** - 在线执行查询、查看结果、历史记录、SQL 分析
+- 🔧 **代码生成器** - 可视化配置生成实体类、Mapper、XML 等代码
 
 ### 4. API 访问
 
 也可以直接访问 REST API：
-- `http://localhost:8080/db-dev/api/datasource/list` - 数据源列表
-- `http://localhost:8080/db-dev/api/metadata/tables?dataSourceName=dataSource` - 表列表
-- `http://localhost:8080/db-dev/api/metadata/table/{tableName}?dataSourceName=dataSource` - 表详情
+
+**数据源相关**
+- `GET /api/datasource/list` - 数据源列表
+- `GET /api/datasource/{name}/stats` - 连接池统计
+
+**元数据相关**
+- `GET /api/metadata/tables?dataSourceName=xxx` - 表列表
+- `GET /api/metadata/table/{tableName}?dataSourceName=xxx` - 表详情
+
+**SQL 执行相关**
+- `POST /api/sql/execute` - 执行 SQL 查询
+- `POST /api/sql/analyze` - SQL 执行计划分析
+
+**代码生成相关**
+- `POST /api/codegen/preview` - 预览生成代码
+- `POST /api/codegen/generate` - 生成并下载代码
+
+**Druid 监控相关**
+- `GET /api/druid/enabled` - 检查是否启用 Druid 监控
+- `GET /api/druid/pool-stats` - 获取连接池状态信息
+- `GET /api/druid/sql-stats` - 获取 SQL 执行统计
+- `GET /api/druid/url-stats` - 获取 URL 访问统计
+- `POST /api/druid/reset-stats` - 重置 Druid 统计数据
+
+**导出相关**
+- `GET /api/export/markdown?dataSourceName=xxx` - 导出 Markdown
+- `GET /api/export/html?dataSourceName=xxx` - 导出 HTML
+- `GET /api/export/sql?dataSourceName=xxx` - 导出 SQL
 
 ## 文档
 
@@ -101,10 +129,11 @@ Web UI 提供以下功能：
 
 ```
 db-dev-spring-boot-starter/
-├── db-dev-core             # 核心模块：数据源、元数据、SQL 引擎
+├── db-dev-core             # 核心模块：数据源、元数据、SQL 执行、连接池监控
 ├── db-dev-autoconfigure    # 自动配置模块
-├── db-dev-web              # Web API 层
-├── db-dev-codegen          # 代码生成模块
+├── db-dev-web              # Web API 层和前端 UI
+├── db-dev-codegen          # 代码生成模块（FreeMarker 模板引擎）
+├── db-dev-ai               # AI 辅助分析模块（可选）
 ├── db-dev-starter          # Starter 聚合模块
 └── example                 # 示例项目
 ```
@@ -115,13 +144,15 @@ db-dev-spring-boot-starter/
 - Spring Boot 3.2.0
 - Java 17+
 - JDBC / DataSource
+- Alibaba Druid（连接池监控）
+- FreeMarker（代码生成模板）
 - Maven
 
 **前端**
-- Vue 3
-- TypeScript
-- Ant Design Vue
+- Vue 3 + Composition API
+- Element Plus
 - Axios
+- Vite
 
 ## 📋 系统要求
 
@@ -144,17 +175,22 @@ db-dev-spring-boot-starter/
 ## 📝 开发路线
 
 - [x] **Phase 1: MVP** - 数据源管理、元数据浏览、基础 UI ✅
-- [ ] **Phase 2** - SQL 执行器、结果展示
-- [ ] **Phase 3** - 代码生成器、模板引擎
-- [ ] **Phase 4** - AI 辅助、性能分析
+- [x] **Phase 2: SQL 执行** - SQL 执行器、结果展示、历史记录、性能分析 ✅
+- [x] **Phase 3: 代码生成** - 代码生成器、FreeMarker 模板引擎、多格式支持 ✅
+- [x] **Phase 4: 监控增强** - Druid 连接池监控、SQL 统计、性能优化建议 ✅
+- [ ] **Phase 5: AI 增强** - AI 辅助 SQL 分析、智能优化建议（可选）
+- [ ] **Phase 6: 扩展功能** - 多数据库支持、访问控制、审计日志
 
 查看 [MVP-PHASE1-COMPLETED.md](MVP-PHASE1-COMPLETED.md) 了解已完成功能
 
 ## ⚠️ 注意事项
 
 - 本工具主要用于**开发环境**，不建议在生产环境启用
-- 默认配置为只读模式，确保数据安全
-- 建议配置访问控制，限制访问 IP
+- SQL 执行器仅支持 SELECT 查询，不允许执行修改操作（INSERT/UPDATE/DELETE）
+- 查询结果最多返回 1000 条记录，避免内存溢出
+- 建议配合 Druid 连接池使用以获得完整的监控功能
+- 代码生成器支持自定义模板，适配不同项目规范
+- 导出功能支持 Markdown、HTML、SQL 多种格式
 
 ## 📄 License
 

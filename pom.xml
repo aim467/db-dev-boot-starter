@@ -19,6 +19,7 @@
         <module>db-dev-web</module>
         <module>db-dev-codegen</module>
         <module>db-dev-starter</module>
+        <module>db-dev-ai</module>
     </modules>
 
     <properties>

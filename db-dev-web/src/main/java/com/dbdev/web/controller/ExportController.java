@@ -6,7 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -18,7 +22,7 @@ import java.sql.SQLException;
 @RestController
 @RequestMapping("/api/export")
 @RequiredArgsConstructor
-public class ExportController extends BaseController {
+public class ExportController {
 
     private final SchemaExportService schemaExportService;
 
@@ -26,7 +30,7 @@ public class ExportController extends BaseController {
      * 导出表结构文档
      *
      * @param dataSourceName 数据源名称
-     * @param format         导出格式: markdown, html, pdf
+     * @param format         导出格式: markdown, html, pdf, sql
      */
     @GetMapping("/{format}")
     public void exportSchema(
@@ -51,9 +55,15 @@ public class ExportController extends BaseController {
                     fileName = dataSourceName + "_schema_" + System.currentTimeMillis() + ".html";
                     mediaType = MediaType.TEXT_HTML;
                     break;
+                case "sql":
+                    content = schemaExportService.exportToSql(dataSourceName);
+                    fileName = dataSourceName + "_schema_" + System.currentTimeMillis() + ".sql";
+                    mediaType = MediaType.parseMediaType("text/sql; charset=UTF-8");
+                    break;
                 default:
                     response.setStatus(400);
-                    response.getWriter().write("Unsupported format: " + format + ". Supported formats: markdown, html");
+                    response.getWriter()
+                            .write("Unsupported format: " + format + ". Supported formats: markdown, html, sql");
                     return;
             }
 

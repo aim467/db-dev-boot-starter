@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import { getDatasourceList } from '@/api/datasource'
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
+import {getDatasourceList} from '@/api/datasource'
 
 export const useDatasourceStore = defineStore('datasource', () => {
   const dataSources = ref([])
