@@ -49,7 +49,7 @@ public class MetadataService {
     private List<TableMetadata> getTables(DatabaseMetaData metaData, String catalog) throws SQLException {
         List<TableMetadata> tables = new ArrayList<>();
 
-        try (ResultSet rs = metaData.getTables(catalog, null, "%", new String[]{"TABLE"})) {
+        try (ResultSet rs = metaData.getTables(catalog, null, "%", null)) {
             while (rs.next()) {
                 String tableName = rs.getString("TABLE_NAME");
                 tables.add(TableMetadata.builder()

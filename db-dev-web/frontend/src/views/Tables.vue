@@ -104,11 +104,6 @@
               {{ scope.row.remarks || '-' }}
             </template>
           </el-table-column>
-          <el-table-column prop="columnCount" label="字段数" width="100" sortable>
-            <template #default="scope">
-              <el-tag size="small">{{ scope.row.columnCount || 0 }}</el-tag>
-            </template>
-          </el-table-column>
           <el-table-column label="操作" width="150" fixed="right">
             <template #default="scope">
               <el-button type="primary" size="small" @click="viewTableDetail(scope.row.tableName)">
