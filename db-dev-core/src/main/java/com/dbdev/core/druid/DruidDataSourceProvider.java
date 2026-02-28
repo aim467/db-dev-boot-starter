@@ -119,14 +119,50 @@ public class DruidDataSourceProvider {
             if (uriStatData != null) {
                 uriStatData.parallelStream().forEach(uriStat -> {
                     Map<String, Object> stat = new LinkedHashMap<>();
+
+                    // 基础请求信息
                     stat.put("uri", uriStat.get("URI"));
                     stat.put("requestCount", uriStat.get("RequestCount"));
-                    stat.put("requestTimeMillis", uriStat.get("RequestTimeMillis"));
                     stat.put("runningCount", uriStat.get("RunningCount"));
                     stat.put("concurrentMax", uriStat.get("ConcurrentMax"));
+                    stat.put("errorCount", uriStat.get("ErrorCount"));
+                    stat.put("lastAccessTime", uriStat.get("LastAccessTime"));
+
+                    // 请求时间统计
+                    stat.put("requestTimeMillis", uriStat.get("RequestTimeMillis"));
+                    stat.put("requestTimeMillisMax", uriStat.get("RequestTimeMillisMax"));
+                    stat.put("requestTimeMillisMaxOccurTime", uriStat.get("RequestTimeMillisMaxOccurTime"));
+
+                    // JDBC 执行统计
                     stat.put("jdbcExecuteCount", uriStat.get("JdbcExecuteCount"));
                     stat.put("jdbcExecuteErrorCount", uriStat.get("JdbcExecuteErrorCount"));
                     stat.put("jdbcExecuteTimeMillis", uriStat.get("JdbcExecuteTimeMillis"));
+                    stat.put("jdbcExecutePeak", uriStat.get("JdbcExecutePeak"));
+
+                    // JDBC 提交回滚统计
+                    stat.put("jdbcCommitCount", uriStat.get("JdbcCommitCount"));
+                    stat.put("jdbcRollbackCount", uriStat.get("JdbcRollbackCount"));
+
+                    // JDBC 查询统计
+                    stat.put("jdbcFetchRowCount", uriStat.get("JdbcFetchRowCount"));
+                    stat.put("jdbcFetchRowPeak", uriStat.get("JdbcFetchRowPeak"));
+
+                    // JDBC 更新统计
+                    stat.put("jdbcUpdateCount", uriStat.get("JdbcUpdateCount"));
+                    stat.put("jdbcUpdatePeak", uriStat.get("JdbcUpdatePeak"));
+
+                    // JDBC 连接池统计
+                    stat.put("jdbcPoolConnectionOpenCount", uriStat.get("JdbcPoolConnectionOpenCount"));
+                    stat.put("jdbcPoolConnectionCloseCount", uriStat.get("JdbcPoolConnectionCloseCount"));
+
+                    // JDBC 结果集统计
+                    stat.put("jdbcResultSetOpenCount", uriStat.get("JdbcResultSetOpenCount"));
+                    stat.put("jdbcResultSetCloseCount", uriStat.get("JdbcResultSetCloseCount"));
+
+                    // 其他统计信息
+                    stat.put("histogram", uriStat.get("Histogram"));
+                    stat.put("profiles", uriStat.get("Profiles"));
+
                     urlStatsList.add(stat);
                 });
             }
@@ -135,6 +171,7 @@ public class DruidDataSourceProvider {
         }
         return urlStatsList;
     }
+
 
 
     /**

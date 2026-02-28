@@ -89,6 +89,83 @@
             {{ formatNumber(row.jdbcExecuteTimeMillis) }}
           </template>
         </el-table-column>
+        <el-table-column prop="errorCount" label="错误次数" width="120" sortable>
+          <template #default="{ row }">
+            <span :class="{ 'error-text': row.errorCount > 0 }">
+              {{ formatNumber(row.errorCount) }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="lastAccessTime" label="最后访问时间" width="200" sortable>
+          <template #default="{ row }">
+            {{ formatDate(row.lastAccessTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="requestTimeMillisMax" label="最大请求耗时(ms)" width="160" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.requestTimeMillisMax) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="requestTimeMillisMaxOccurTime" label="最大耗时发生时间" width="200" sortable>
+          <template #default="{ row }">
+            {{ formatDate(row.requestTimeMillisMaxOccurTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcExecutePeak" label="SQL执行峰值" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcExecutePeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcCommitCount" label="SQL提交次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcCommitCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcRollbackCount" label="SQL回滚次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcRollbackCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcFetchRowCount" label="SQL获取行数" width="160" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcFetchRowCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcFetchRowPeak" label="SQL获取行数峰值" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcFetchRowPeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcUpdateCount" label="SQL更新次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcUpdateCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcUpdatePeak" label="SQL更新次数峰值" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcUpdatePeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcPoolConnectionOpenCount" label="连接池打开次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcPoolConnectionOpenCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcPoolConnectionCloseCount" label="连接池关闭次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcPoolConnectionCloseCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcResultSetOpenCount" label="结果集打开次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcResultSetOpenCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcResultSetCloseCount" label="结果集关闭次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcResultSetCloseCount) }}
+          </template>
+        </el-table-column>
       </el-table>
 
       <div v-if="filteredUrlStats.length === 0 && !loading" class="empty-tip">
@@ -172,6 +249,19 @@ const handleSortChange = ({prop, order}) => {
 const formatNumber = (num) => {
   if (num === undefined || num === null) return '0'
   return num.toLocaleString()
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  })
 }
 
 onMounted(() => {

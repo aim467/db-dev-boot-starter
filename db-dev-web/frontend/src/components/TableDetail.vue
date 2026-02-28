@@ -293,6 +293,15 @@ defineExpose({
 }
 
 .drawer-mode :deep(.el-table) {
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 220px);
+}
+
+.drawer-mode :deep(.el-tabs__content) {
+  padding: 12px;
+}
+
+.drawer-mode :deep(.el-tab-pane) {
+  max-height: calc(100vh - 180px);
+  overflow: auto;
 }
 </style>
