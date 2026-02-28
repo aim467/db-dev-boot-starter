@@ -87,22 +87,22 @@ public class DruidDataSourceProvider {
                         stat.put("sql", sqlStat.getSql());
                         stat.put("hash", sqlStat.getSqlHash()); // SQL 哈希值
                         stat.put("dbType", sqlStat.getDbType()); // 数据库类型
-                        
+
                         // 执行统计
                         stat.put("executeCount", sqlStat.getExecuteCount());
                         stat.put("totalTime", sqlStat.getExecuteMillisTotal());
                         stat.put("maxTime", sqlStat.getExecuteMillisMax());
                         stat.put("avgTime", sqlStat.getExecuteCount() > 0
                                 ? sqlStat.getExecuteMillisTotal() / sqlStat.getExecuteCount() : 0);
-                        
+
                         // 错误统计
                         stat.put("errorCount", sqlStat.getErrorCount());
-                        
+
                         // 并发统计
                         stat.put("runningCount", sqlStat.getRunningCount());
                         stat.put("concurrentMax", sqlStat.getConcurrentMax());
                         stat.put("inTransactionCount", sqlStat.getInTransactionCount()); // 事务内执行次数
-                        
+
                         // 数据操作统计
                         stat.put("fetchRowCount", sqlStat.getFetchRowCount());
                         stat.put("fetchRowCountMax", sqlStat.getFetchRowCountMax()); // 最大获取行数
@@ -133,8 +133,21 @@ public class DruidDataSourceProvider {
         return sqlStatsList;
     }
 
+
+    public List<Map<String, Object>> getWebSessionStats() {
+        List<Map<String, Object>> webSessionStatsList = new ArrayList<>();
+        try {
+            webSessionStatsList = WebAppStatManager.getInstance().getSessionStatData();
+        } catch (Exception e) {
+            log.warn("Failed to get web session stats: {}", e.getMessage());
+        }
+        return webSessionStatsList;
+    }
+
+
     /**
      * 获取 url 访问信息
+     *
      * @return URI统计信息列表
      */
     public List<Map<String, Object>> getUrlStats() {
@@ -196,7 +209,6 @@ public class DruidDataSourceProvider {
         }
         return urlStatsList;
     }
-
 
 
     /**

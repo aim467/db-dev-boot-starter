@@ -77,6 +77,17 @@ public class DruidMonitorController {
         }
     }
 
+    @GetMapping("/session-stats")
+    public Result<List<Map<String, Object>>> getSessionStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getWebSessionStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get session stats", e);
+            return Result.error("获取会话统计失败: " + e.getMessage());
+        }
+    }
+
 
     /**
      * 重置统计信息

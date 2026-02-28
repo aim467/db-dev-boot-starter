@@ -26,6 +26,13 @@ export function getUrlStats() {
 }
 
 /**
+ * 获取会话统计信息
+ */
+export function getSessionStats() {
+  return request.get('/druid/session-stats')
+}
+
+/**
  * 重置统计信息
  */
 export function resetStats() {

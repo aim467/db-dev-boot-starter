@@ -58,6 +58,20 @@
             :auto-refresh="activeTab === 'url'"
           />
         </el-tab-pane>
+
+        <el-tab-pane name="session">
+          <template #label>
+            <span>
+              <el-icon><Link /></el-icon>
+              session 统计
+            </span>
+          </template>
+
+          <SessionStats
+            ref="sessionStatsRef"
+            :auto-refresh="activeTab === 'session'"
+          />
+        </el-tab-pane>
       </el-tabs>
     </template>
 
@@ -75,6 +89,7 @@ import {checkDruidEnabled, getPoolStats} from '@/api/druid'
 import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
 import UrlStats from '@/components/UrlStats.vue'
+import SessionStats from '@/components/SessionStats.vue'
 
 const loading = ref(true)
 const druidEnabled = ref(false)
@@ -83,6 +98,8 @@ const poolStats = ref(null)
 const poolLoading = ref(false)
 const sqlStatsRef = ref(null)
 const urlStatsRef = ref(null)
+const sessionStatsRef = ref(null)
+
 
 let poolRefreshTimer = null
 
@@ -138,6 +155,9 @@ watch(activeTab, (newTab) => {
   }
   if (newTab === 'url' && urlStatsRef.value) {
     urlStatsRef.value.refresh()
+  }
+  if (newTab === 'session' && sessionStatsRef.value) {
+    sessionStatsRef.value.refresh()
   }
 })
 
