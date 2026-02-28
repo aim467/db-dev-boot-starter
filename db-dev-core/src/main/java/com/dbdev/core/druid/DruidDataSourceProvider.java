@@ -85,16 +85,42 @@ public class DruidDataSourceProvider {
                     sqlStatMap.values().parallelStream().forEach(sqlStat -> {
                         Map<String, Object> stat = new LinkedHashMap<>();
                         stat.put("sql", sqlStat.getSql());
+                        stat.put("hash", sqlStat.getSqlHash()); // SQL 哈希值
+                        stat.put("dbType", sqlStat.getDbType()); // 数据库类型
+                        
+                        // 执行统计
                         stat.put("executeCount", sqlStat.getExecuteCount());
                         stat.put("totalTime", sqlStat.getExecuteMillisTotal());
                         stat.put("maxTime", sqlStat.getExecuteMillisMax());
                         stat.put("avgTime", sqlStat.getExecuteCount() > 0
                                 ? sqlStat.getExecuteMillisTotal() / sqlStat.getExecuteCount() : 0);
+                        
+                        // 错误统计
                         stat.put("errorCount", sqlStat.getErrorCount());
+                        
+                        // 并发统计
                         stat.put("runningCount", sqlStat.getRunningCount());
                         stat.put("concurrentMax", sqlStat.getConcurrentMax());
+                        stat.put("inTransactionCount", sqlStat.getInTransactionCount()); // 事务内执行次数
+                        
+                        // 数据操作统计
                         stat.put("fetchRowCount", sqlStat.getFetchRowCount());
+                        stat.put("fetchRowCountMax", sqlStat.getFetchRowCountMax()); // 最大获取行数
                         stat.put("updateCount", sqlStat.getUpdateCount());
+
+                        // 资源使用统计
+                        stat.put("inputStreamOpenCount", sqlStat.getInputStreamOpenCount()); // 输入流打开次数
+                        stat.put("readerOpenCount", sqlStat.getReaderOpenCount()); // Reader打开次数
+                        stat.put("blobOpenCount", sqlStat.getBlobOpenCount()); // BLOB打开次数
+                        stat.put("clobOpenCount", sqlStat.getClobOpenCount()); // CLOB打开次数
+
+                        // 网络IO统计
+                        stat.put("readBytesLength", sqlStat.getReadBytesLength()); // 读取字节数
+                        stat.put("readStringLength", sqlStat.getReadStringLength()); // 读取字符串长度
+
+                        // 慢查询相关
+                        stat.put("lastSlowParameters", sqlStat.getLastSlowParameters()); // 最后慢查询参数
+                        
                         sqlStatsList.add(stat);
                     });
                 }
