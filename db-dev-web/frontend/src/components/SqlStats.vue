@@ -65,47 +65,76 @@
         style="width: 100%"
         max-height="500"
         v-loading="loading"
-        row-key="id"
+        row-key="hash"
         :default-sort="{ prop: 'executeCount', order: 'descending' }"
         @sort-change="handleSortChange"
+        @expand-change="handleExpandChange"
       >
-        <el-table-column prop="sql" label="SQL" min-width="250" show-overflow-tooltip>
+        <el-table-column type="expand" width="50">
+          <template #default="{ row }">
+            <div class="sql-detail">
+              <el-descriptions :column="3" border size="small">
+                <el-descriptions-item label="SQL哈希">{{ row.hash }}</el-descriptions-item>
+                <el-descriptions-item label="数据库类型">{{ row.dbType }}</el-descriptions-item>
+                <el-descriptions-item label="最大并发">{{ row.concurrentMax }}</el-descriptions-item>
+                <el-descriptions-item label="事务内执行">{{ formatNumber(row.inTransactionCount) }}</el-descriptions-item>
+                <el-descriptions-item label="最大获取行数">{{ formatNumber(row.fetchRowCountMax) }}</el-descriptions-item>
+                <el-descriptions-item label="更新行数">{{ formatNumber(row.updateCount) }}</el-descriptions-item>
+                <el-descriptions-item label="读取字节数">{{ formatBytes(row.readBytesLength) }}</el-descriptions-item>
+                <el-descriptions-item label="读取字符串长度">{{ formatNumber(row.readStringLength) }}</el-descriptions-item>
+                <el-descriptions-item label="输入流打开">{{ formatNumber(row.inputStreamOpenCount) }}</el-descriptions-item>
+                <el-descriptions-item label="Reader打开">{{ formatNumber(row.readerOpenCount) }}</el-descriptions-item>
+                <el-descriptions-item label="BLOB打开">{{ formatNumber(row.blobOpenCount) }}</el-descriptions-item>
+                <el-descriptions-item label="CLOB打开">{{ formatNumber(row.clobOpenCount) }}</el-descriptions-item>
+                <el-descriptions-item label="最后慢查询参数" :span="3">
+                  <span class="slow-params">{{ row.lastSlowParameters || '无' }}</span>
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="sql" label="SQL" min-width="280" show-overflow-tooltip>
           <template #default="{ row }">
             <el-tooltip :content="row.sql" placement="top" :show-after="500">
               <span class="sql-text">{{ row.sql }}</span>
             </el-tooltip>
           </template>
         </el-table-column>
-        <el-table-column prop="executeCount" label="执行次数" width="120" sortable>
+        <el-table-column prop="executeCount" label="执行次数" width="110" sortable>
           <template #default="{ row }">
             {{ formatNumber(row.executeCount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="fetchRowCount" label="返回行数" width="120" sortable>
+        <el-table-column prop="fetchRowCount" label="返回行数" width="110" sortable>
           <template #default="{ row }">
             {{ formatNumber(row.fetchRowCount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="totalTime" label="总耗时(ms)" width="130" sortable>
+        <el-table-column prop="updateCount" label="更新行数" width="110" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.updateCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="totalTime" label="总耗时(ms)" width="120" sortable>
           <template #default="{ row }">
             {{ formatNumber(row.totalTime) }}
           </template>
         </el-table-column>
-        <el-table-column prop="avgTime" label="平均耗时(ms)" width="140" sortable>
+        <el-table-column prop="avgTime" label="平均耗时(ms)" width="150" sortable>
           <template #default="{ row }">
             <span :class="getTimeClass(row.avgTime)">
               {{ row.avgTime }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="maxTime" label="最大耗时(ms)" width="140" sortable>
+        <el-table-column prop="maxTime" label="最大耗时(ms)" width="150" sortable>
           <template #default="{ row }">
             <span :class="getTimeClass(row.maxTime)">
               {{ formatNumber(row.maxTime) }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="errorCount" label="错误次数" width="120" sortable>
+        <el-table-column prop="errorCount" label="错误次数" width="110" sortable>
           <template #default="{ row }">
             <span :class="{ 'error-text': row.errorCount > 0 }">
               {{ row.errorCount }}
@@ -113,7 +142,8 @@
           </template>
         </el-table-column>
         <el-table-column prop="runningCount" label="执行中" width="80" />
-        <el-table-column prop="histogram" label="耗时分布" width="150">
+        <el-table-column prop="concurrentMax" label="最大并发" width="150" sortable />
+        <el-table-column prop="histogram" label="耗时分布" width="120">
           <template #default="{ row }">
             <el-tooltip
               :content="`0-10ms: ${row.histogram?.[0] || 0} | 10-100ms: ${row.histogram?.[1] || 0} | 100-1000ms: ${row.histogram?.[2] || 0} | >1000ms: ${row.histogram?.[3] || 0}`"
@@ -240,6 +270,21 @@ const handleSortChange = ({ prop, order }) => {
 const formatNumber = (num) => {
   if (num === undefined || num === null) return '0'
   return num.toLocaleString()
+}
+
+// 格式化字节大小
+const formatBytes = (bytes) => {
+  if (bytes === undefined || bytes === null || bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// 处理展开行变化
+const expandedRows = ref([])
+const handleExpandChange = (row, expandedRowsList) => {
+  expandedRows.value = expandedRowsList
 }
 
 // 获取时间样式类
@@ -391,6 +436,20 @@ defineExpose({
 
 .empty-tip {
   padding: 40px;
+}
+
+.sql-detail {
+  padding: 12px 24px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.slow-params {
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  color: #606266;
+  word-break: break-all;
 }
 
 @media (max-width: 768px) {

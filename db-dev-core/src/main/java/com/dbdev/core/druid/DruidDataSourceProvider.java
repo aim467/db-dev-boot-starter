@@ -56,7 +56,7 @@ public class DruidDataSourceProvider {
             stats.put("poolingCount", druid.getPoolingCount());
             stats.put("waitThreadCount", druid.getWaitThreadCount());
 
-            // 统计信息
+            // 统计信息`
             stats.put("connectCount", druid.getConnectCount());
             stats.put("closeCount", druid.getCloseCount());
             stats.put("createCount", druid.getCreateCount());
@@ -120,7 +120,6 @@ public class DruidDataSourceProvider {
 
                         // 慢查询相关
                         stat.put("lastSlowParameters", sqlStat.getLastSlowParameters()); // 最后慢查询参数
-                        
                         sqlStatsList.add(stat);
                     });
                 }
