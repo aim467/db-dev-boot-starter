@@ -99,6 +99,17 @@ public class DruidMonitorController {
         }
     }
 
+    @GetMapping("/spring-stats")
+    public Result<List<Map<String, Object>>> getSpringStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getSpringStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get Spring Druid stats", e);
+            return Result.error("获取 Spring Druid 统计失败: " + e.getMessage());
+        }
+    }
+
 
     /**
      * 重置统计信息

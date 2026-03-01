@@ -2,6 +2,7 @@ package com.dbdev.core.druid;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.stat.WebAppStatManager;
+import com.alibaba.druid.support.spring.stat.SpringStatManager;
 import com.alibaba.druid.wall.WallProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -240,9 +241,12 @@ public class DruidDataSourceProvider {
 
     public Map<String, Object> getWallStats() {
         if (dataSource instanceof DruidDataSource druid) {
-            Map<String, Object> wallStatMap = druid.getWallStatMap();
-            return wallStatMap;
+            return druid.getWallStatMap();
         }
         return Collections.emptyMap();
+    }
+
+    public List<Map<String, Object>> getSpringStats() {
+        return SpringStatManager.getInstance().getMethodStatData();
     }
 }

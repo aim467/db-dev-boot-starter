@@ -40,6 +40,13 @@ export function getWallStats() {
 }
 
 /**
+ * 获取 Spring Druid 统计信息
+ */
+export function getSpringStats() {
+  return request.get('/druid/spring-stats')
+}
+
+/**
  * 重置统计信息
  */
 export function resetStats() {

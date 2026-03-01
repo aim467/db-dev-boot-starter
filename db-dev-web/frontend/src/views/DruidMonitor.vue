@@ -86,6 +86,20 @@
             :auto-refresh="activeTab === 'wall'"
           />
         </el-tab-pane>
+
+        <el-tab-pane name="spring">
+          <template #label>
+            <span>
+              <el-icon><SpringIcon /></el-icon>
+              Spring 监控
+            </span>
+          </template>
+
+          <SpringStats
+            ref="springStatsRef"
+            :auto-refresh="activeTab === 'spring'"
+          />
+        </el-tab-pane>
       </el-tabs>
     </template>
 
@@ -98,13 +112,35 @@
 </template>
 
 <script setup>
-import {onMounted, onUnmounted, ref, watch} from 'vue'
+import {h, onMounted, onUnmounted, ref, watch} from 'vue'
 import {checkDruidEnabled, getPoolStats} from '@/api/druid'
 import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
 import UrlStats from '@/components/UrlStats.vue'
 import SessionStats from '@/components/SessionStats.vue'
 import WallStats from '@/components/WallStats.vue'
+import SpringStats from '@/components/SpringStats.vue'
+
+// 自定义 Spring 图标组件
+const SpringIcon = {
+  render() {
+    return h('svg', {
+      xmlns: 'http://www.w3.org/2000/svg',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      width: '1em',
+      height: '1em'
+    }, [
+      h('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' }),
+      h('path', { d: 'M12 6v12' }),
+      h('path', { d: 'M8 10l4-4 4 4' })
+    ])
+  }
+}
 
 const loading = ref(true)
 const druidEnabled = ref(false)
@@ -115,6 +151,7 @@ const sqlStatsRef = ref(null)
 const urlStatsRef = ref(null)
 const sessionStatsRef = ref(null)
 const wallStatsRef = ref(null)
+const springStatsRef = ref(null)
 
 
 let poolRefreshTimer = null
@@ -177,6 +214,9 @@ watch(activeTab, (newTab) => {
   }
   if (newTab === 'wall' && wallStatsRef.value) {
     wallStatsRef.value.refresh()
+  }
+  if (newTab === 'spring' && springStatsRef.value) {
+    springStatsRef.value.refresh()
   }
 })
 
