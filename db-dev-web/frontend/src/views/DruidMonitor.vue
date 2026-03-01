@@ -24,7 +24,7 @@
           </template>
           
           <PoolStats
-            :pool-stats="poolStats"
+            :pool-stats-list="poolStatsList"
             :loading="poolLoading"
             @refresh="loadPoolStats"
           />
@@ -145,7 +145,7 @@ const SpringIcon = {
 const loading = ref(true)
 const druidEnabled = ref(false)
 const activeTab = ref('pool')
-const poolStats = ref(null)
+const poolStatsList = ref([])
 const poolLoading = ref(false)
 const sqlStatsRef = ref(null)
 const urlStatsRef = ref(null)
@@ -177,9 +177,10 @@ const loadPoolStats = async () => {
   poolLoading.value = true
   try {
     const res = await getPoolStats()
-    poolStats.value = res.data
+    poolStatsList.value = res.data || []
   } catch (error) {
     console.error('Failed to load pool stats:', error)
+    poolStatsList.value = []
   } finally {
     poolLoading.value = false
   }

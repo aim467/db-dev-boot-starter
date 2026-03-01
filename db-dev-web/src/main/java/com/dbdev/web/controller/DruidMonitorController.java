@@ -42,9 +42,9 @@ public class DruidMonitorController {
      * 获取连接池状态
      */
     @GetMapping("/pool-stats")
-    public Result<Map<String, Object>> getPoolStats() {
+    public Result<List<Map<String, Object>>> getPoolStats() {
         try {
-            Map<String, Object> stats = druidDataSourceProvider.getPoolStats();
+            List<Map<String, Object>> stats = druidDataSourceProvider.getPoolStats();
             return Result.success(stats);
         } catch (Exception e) {
             log.error("Failed to get Druid pool stats", e);

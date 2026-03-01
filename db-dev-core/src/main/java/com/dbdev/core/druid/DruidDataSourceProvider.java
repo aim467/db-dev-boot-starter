@@ -1,7 +1,10 @@
 package com.dbdev.core.druid;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.stat.DruidDataSourceStatManager;
+import com.alibaba.druid.stat.DruidStatManagerFacade;
 import com.alibaba.druid.support.http.stat.WebAppStatManager;
+import com.alibaba.druid.support.json.JSONUtils;
 import com.alibaba.druid.support.spring.stat.SpringStatManager;
 import com.alibaba.druid.wall.WallProvider;
 import lombok.extern.slf4j.Slf4j;
@@ -35,40 +38,43 @@ public class DruidDataSourceProvider {
     /**
      * 获取 Druid 连接池状态信息
      */
-    public Map<String, Object> getPoolStats() {
-        Map<String, Object> stats = new LinkedHashMap<>();
-        if (dataSource instanceof DruidDataSource druid) {
-            // 基本信息
-            stats.put("name", druid.getName());
-            stats.put("dbType", druid.getDbType());
-            stats.put("driverClassName", druid.getDriverClassName());
-            stats.put("url", maskUrl(druid.getUrl()));
+    public List<Map<String, Object>> getPoolStats() {
 
-            // 连接池配置
-            stats.put("initialSize", druid.getInitialSize());
-            stats.put("minIdle", druid.getMinIdle());
-            stats.put("maxActive", druid.getMaxActive());
-            stats.put("maxWait", druid.getMaxWait());
-
-            // 实时状态
-            stats.put("activeCount", druid.getActiveCount());
-            stats.put("poolingCount", druid.getPoolingCount());
-            stats.put("waitThreadCount", druid.getWaitThreadCount());
-
-            // 统计信息`
-            stats.put("connectCount", druid.getConnectCount());
-            stats.put("closeCount", druid.getCloseCount());
-            stats.put("createCount", druid.getCreateCount());
-            stats.put("destroyCount", druid.getDestroyCount());
-            stats.put("connectErrorCount", druid.getConnectErrorCount());
-
-            // 计算使用率
-            int maxActive = druid.getMaxActive();
-            int activeCount = druid.getActiveCount();
-            double usageRate = maxActive > 0 ? (double) activeCount / maxActive * 100 : 0;
-            stats.put("usageRate", Math.round(usageRate * 100) / 100.0);
-        }
-        return stats;
+        List<Map<String, Object>> dataSourceStatDataList = DruidStatManagerFacade.getInstance().getDataSourceStatDataList();
+        return dataSourceStatDataList;
+        //        Map<String, Object> stats = new LinkedHashMap<>();
+//        if (dataSource instanceof DruidDataSource druid) {
+//            // 基本信息
+//            stats.put("name", druid.getName());
+//            stats.put("dbType", druid.getDbType());
+//            stats.put("driverClassName", druid.getDriverClassName());
+//            stats.put("url", maskUrl(druid.getUrl()));
+//
+//            // 连接池配置
+//            stats.put("initialSize", druid.getInitialSize());
+//            stats.put("minIdle", druid.getMinIdle());
+//            stats.put("maxActive", druid.getMaxActive());
+//            stats.put("maxWait", druid.getMaxWait());
+//
+//            // 实时状态
+//            stats.put("activeCount", druid.getActiveCount());
+//            stats.put("poolingCount", druid.getPoolingCount());
+//            stats.put("waitThreadCount", druid.getWaitThreadCount());
+//
+//            // 统计信息`
+//            stats.put("connectCount", druid.getConnectCount());
+//            stats.put("closeCount", druid.getCloseCount());
+//            stats.put("createCount", druid.getCreateCount());
+//            stats.put("destroyCount", druid.getDestroyCount());
+//            stats.put("connectErrorCount", druid.getConnectErrorCount());
+//
+//            // 计算使用率
+//            int maxActive = druid.getMaxActive();
+//            int activeCount = druid.getActiveCount();
+//            double usageRate = maxActive > 0 ? (double) activeCount / maxActive * 100 : 0;
+//            stats.put("usageRate", Math.round(usageRate * 100) / 100.0);
+//        }
+//        return stats;
     }
 
 
