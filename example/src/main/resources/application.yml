@@ -46,7 +46,7 @@ spring:
         session-stat-enable: true
         session-stat-max-count: 1000
         url-pattern: /*
-
+      aop-patterns: com.dbdev.example.*
 
 
 db:
