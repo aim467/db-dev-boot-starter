@@ -62,14 +62,28 @@
         <el-tab-pane name="session">
           <template #label>
             <span>
-              <el-icon><Link /></el-icon>
-              session 统计
+              <el-icon><User /></el-icon>
+              会话统计
             </span>
           </template>
 
           <SessionStats
             ref="sessionStatsRef"
             :auto-refresh="activeTab === 'session'"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane name="wall">
+          <template #label>
+            <span>
+              <el-icon><Shield /></el-icon>
+              Wall 防火墙
+            </span>
+          </template>
+
+          <WallStats
+            ref="wallStatsRef"
+            :auto-refresh="activeTab === 'wall'"
           />
         </el-tab-pane>
       </el-tabs>
@@ -90,6 +104,7 @@ import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
 import UrlStats from '@/components/UrlStats.vue'
 import SessionStats from '@/components/SessionStats.vue'
+import WallStats from '@/components/WallStats.vue'
 
 const loading = ref(true)
 const druidEnabled = ref(false)
@@ -99,6 +114,7 @@ const poolLoading = ref(false)
 const sqlStatsRef = ref(null)
 const urlStatsRef = ref(null)
 const sessionStatsRef = ref(null)
+const wallStatsRef = ref(null)
 
 
 let poolRefreshTimer = null
@@ -158,6 +174,9 @@ watch(activeTab, (newTab) => {
   }
   if (newTab === 'session' && sessionStatsRef.value) {
     sessionStatsRef.value.refresh()
+  }
+  if (newTab === 'wall' && wallStatsRef.value) {
+    wallStatsRef.value.refresh()
   }
 })
 

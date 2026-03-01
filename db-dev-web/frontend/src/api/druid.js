@@ -33,6 +33,13 @@ export function getSessionStats() {
 }
 
 /**
+ * 获取 Wall 防火墙统计信息
+ */
+export function getWallStats() {
+  return request.get('/druid/wall-stats')
+}
+
+/**
  * 重置统计信息
  */
 export function resetStats() {

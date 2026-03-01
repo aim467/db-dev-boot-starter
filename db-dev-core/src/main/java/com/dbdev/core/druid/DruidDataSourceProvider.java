@@ -2,14 +2,12 @@ package com.dbdev.core.druid;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.alibaba.druid.support.http.stat.WebAppStatManager;
+import com.alibaba.druid.wall.WallProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Druid 数据源信息提供者
@@ -238,5 +236,13 @@ public class DruidDataSourceProvider {
         if (url == null) return null;
         // 掩码密码参数
         return url.replaceAll("password=[^&]*", "password=***");
+    }
+
+    public Map<String, Object> getWallStats() {
+        if (dataSource instanceof DruidDataSource druid) {
+            Map<String, Object> wallStatMap = druid.getWallStatMap();
+            return wallStatMap;
+        }
+        return Collections.emptyMap();
     }
 }

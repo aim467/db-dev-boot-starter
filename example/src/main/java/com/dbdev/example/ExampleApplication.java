@@ -33,4 +33,10 @@ public class ExampleApplication {
 
         return "Session created! ID: " + session.getId() + ", Please check Druid Web Session page.";
     }
+
+    @GetMapping("/test-wall")
+    public String testWall() {
+        jdbcTemplate.execute("delete from r_pan_error_log");
+        return "OK";
+    }
 }

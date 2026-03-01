@@ -88,6 +88,17 @@ public class DruidMonitorController {
         }
     }
 
+    @GetMapping("/wall-stats")
+    public Result<Map<String, Object>> getWallStats() {
+        try {
+            Map<String, Object> stats = druidDataSourceProvider.getWallStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get Wall stats", e);
+            return Result.error("获取 Wall 统计失败: " + e.getMessage());
+        }
+    }
+
 
     /**
      * 重置统计信息
