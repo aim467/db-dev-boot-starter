@@ -4,7 +4,7 @@
     <el-aside width="240px">
       <div class="sidebar-header">
         <h1>
-          <el-icon><Database /></el-icon>
+          <el-icon><Connection /></el-icon>
           DB Dev
         </h1>
         <p>Database Development Assistant</p>
@@ -253,7 +253,7 @@ onMounted(() => {
 }
 
 .content-body {
-  padding: 24px;
+  padding: 15px;
   height: calc(100vh - 60px);
   overflow-y: auto;
   background: #f5f7fa;

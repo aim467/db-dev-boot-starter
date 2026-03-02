@@ -1,5 +1,5 @@
 <template>
-  <div class="druid-monitor">
+  <div>
     <!-- 未启用 Druid 提示 -->
     <el-alert
       v-if="!druidEnabled && !loading"
@@ -234,10 +234,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.druid-monitor {
-  padding: 10px;
-}
-
 .druid-tabs {
   min-height: calc(100vh - 100px);
   border-radius: 16px;

@@ -92,14 +92,14 @@
             >
               <div class="ds-left">
                 <div class="ds-icon" :style="{ background: getDsColor(ds.type) }">
-                  <el-icon><Database /></el-icon>
+                  <el-icon><Connection /></el-icon>
                 </div>
                 <div class="ds-info">
                   <div class="ds-name">
                     {{ ds.name }}
-                    <el-tag v-if="ds.primary" size="small" type="danger" effect="light">主</el-tag>
+                    <el-tag v-if="ds.primary" size="small" type="primary" effect="light">主</el-tag>
                   </div>
-                  <div class="ds-address">{{ ds.host }}:{{ ds.port }}</div>
+                  <div class="ds-address">{{ ds.url }}</div>
                 </div>
               </div>
               <div class="ds-right">
@@ -539,7 +539,7 @@ onUnmounted(() => {
 
 .datasource-item.primary {
   background: #fef0f0;
-  border-color: #f56c6c;
+  border-color: #419ae3;
 }
 
 .ds-left {
