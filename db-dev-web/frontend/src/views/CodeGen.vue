@@ -1,5 +1,5 @@
 <template>
-  <div class="codegen-container">
+  <div>
     <!-- 配置卡片 -->
     <el-card shadow="hover" class="config-card">
       <template #header>
@@ -446,12 +446,6 @@ loadDataSources()
 </script>
 
 <style scoped>
-.codegen-container {
-  padding: 10px;
-  /* 圆角，阴影 */
-  /* max-width: 1400px; */
-  margin: 0 auto;
-}
 
 .config-card {
   border-radius: 10px;

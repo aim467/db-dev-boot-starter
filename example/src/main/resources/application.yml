@@ -2,7 +2,7 @@ spring:
   application:
     name: db-dev-example
   datasource:
-    url: jdbc:mysql://192.168.1.188:3306/ys?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -30,6 +30,10 @@ spring:
           slow-sql-millis: 1
           slow-sql-log-level: info
           log-slow-sql: true
+        wall:
+          enabled: true
+          config:
+            delete-where-none-check: false
       statViewServlet: # Druid监控页面配置
         enabled: true # 启用Druid监控页面
         login-username: root # 监控页面登录用户名
@@ -42,7 +46,7 @@ spring:
         session-stat-enable: true
         session-stat-max-count: 1000
         url-pattern: /*
-
+      aop-patterns: com.dbdev.example.*
 
 
 db:

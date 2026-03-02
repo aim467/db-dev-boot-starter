@@ -1,15 +1,14 @@
 package com.dbdev.core.druid;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.stat.DruidStatManagerFacade;
 import com.alibaba.druid.support.http.stat.WebAppStatManager;
+import com.alibaba.druid.support.spring.stat.SpringStatManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Druid 数据源信息提供者
@@ -36,40 +35,8 @@ public class DruidDataSourceProvider {
     /**
      * 获取 Druid 连接池状态信息
      */
-    public Map<String, Object> getPoolStats() {
-        Map<String, Object> stats = new LinkedHashMap<>();
-        if (dataSource instanceof DruidDataSource druid) {
-            // 基本信息
-            stats.put("name", druid.getName());
-            stats.put("dbType", druid.getDbType());
-            stats.put("driverClassName", druid.getDriverClassName());
-            stats.put("url", maskUrl(druid.getUrl()));
-
-            // 连接池配置
-            stats.put("initialSize", druid.getInitialSize());
-            stats.put("minIdle", druid.getMinIdle());
-            stats.put("maxActive", druid.getMaxActive());
-            stats.put("maxWait", druid.getMaxWait());
-
-            // 实时状态
-            stats.put("activeCount", druid.getActiveCount());
-            stats.put("poolingCount", druid.getPoolingCount());
-            stats.put("waitThreadCount", druid.getWaitThreadCount());
-
-            // 统计信息
-            stats.put("connectCount", druid.getConnectCount());
-            stats.put("closeCount", druid.getCloseCount());
-            stats.put("createCount", druid.getCreateCount());
-            stats.put("destroyCount", druid.getDestroyCount());
-            stats.put("connectErrorCount", druid.getConnectErrorCount());
-
-            // 计算使用率
-            int maxActive = druid.getMaxActive();
-            int activeCount = druid.getActiveCount();
-            double usageRate = maxActive > 0 ? (double) activeCount / maxActive * 100 : 0;
-            stats.put("usageRate", Math.round(usageRate * 100) / 100.0);
-        }
-        return stats;
+    public List<Map<String, Object>> getPoolStats() {
+        return DruidStatManagerFacade.getInstance().getDataSourceStatDataList();
     }
 
 
@@ -85,16 +52,41 @@ public class DruidDataSourceProvider {
                     sqlStatMap.values().parallelStream().forEach(sqlStat -> {
                         Map<String, Object> stat = new LinkedHashMap<>();
                         stat.put("sql", sqlStat.getSql());
+                        stat.put("hash", sqlStat.getSqlHash()); // SQL 哈希值
+                        stat.put("dbType", sqlStat.getDbType()); // 数据库类型
+
+                        // 执行统计
                         stat.put("executeCount", sqlStat.getExecuteCount());
                         stat.put("totalTime", sqlStat.getExecuteMillisTotal());
                         stat.put("maxTime", sqlStat.getExecuteMillisMax());
                         stat.put("avgTime", sqlStat.getExecuteCount() > 0
                                 ? sqlStat.getExecuteMillisTotal() / sqlStat.getExecuteCount() : 0);
+
+                        // 错误统计
                         stat.put("errorCount", sqlStat.getErrorCount());
+
+                        // 并发统计
                         stat.put("runningCount", sqlStat.getRunningCount());
                         stat.put("concurrentMax", sqlStat.getConcurrentMax());
+                        stat.put("inTransactionCount", sqlStat.getInTransactionCount()); // 事务内执行次数
+
+                        // 数据操作统计
                         stat.put("fetchRowCount", sqlStat.getFetchRowCount());
+                        stat.put("fetchRowCountMax", sqlStat.getFetchRowCountMax()); // 最大获取行数
                         stat.put("updateCount", sqlStat.getUpdateCount());
+
+                        // 资源使用统计
+                        stat.put("inputStreamOpenCount", sqlStat.getInputStreamOpenCount()); // 输入流打开次数
+                        stat.put("readerOpenCount", sqlStat.getReaderOpenCount()); // Reader打开次数
+                        stat.put("blobOpenCount", sqlStat.getBlobOpenCount()); // BLOB打开次数
+                        stat.put("clobOpenCount", sqlStat.getClobOpenCount()); // CLOB打开次数
+
+                        // 网络IO统计
+                        stat.put("readBytesLength", sqlStat.getReadBytesLength()); // 读取字节数
+                        stat.put("readStringLength", sqlStat.getReadStringLength()); // 读取字符串长度
+
+                        // 慢查询相关
+                        stat.put("lastSlowParameters", sqlStat.getLastSlowParameters()); // 最后慢查询参数
                         sqlStatsList.add(stat);
                     });
                 }
@@ -108,8 +100,21 @@ public class DruidDataSourceProvider {
         return sqlStatsList;
     }
 
+
+    public List<Map<String, Object>> getWebSessionStats() {
+        List<Map<String, Object>> webSessionStatsList = new ArrayList<>();
+        try {
+            webSessionStatsList = WebAppStatManager.getInstance().getSessionStatData();
+        } catch (Exception e) {
+            log.warn("Failed to get web session stats: {}", e.getMessage());
+        }
+        return webSessionStatsList;
+    }
+
+
     /**
      * 获取 url 访问信息
+     *
      * @return URI统计信息列表
      */
     public List<Map<String, Object>> getUrlStats() {
@@ -119,14 +124,50 @@ public class DruidDataSourceProvider {
             if (uriStatData != null) {
                 uriStatData.parallelStream().forEach(uriStat -> {
                     Map<String, Object> stat = new LinkedHashMap<>();
+
+                    // 基础请求信息
                     stat.put("uri", uriStat.get("URI"));
                     stat.put("requestCount", uriStat.get("RequestCount"));
-                    stat.put("requestTimeMillis", uriStat.get("RequestTimeMillis"));
                     stat.put("runningCount", uriStat.get("RunningCount"));
                     stat.put("concurrentMax", uriStat.get("ConcurrentMax"));
+                    stat.put("errorCount", uriStat.get("ErrorCount"));
+                    stat.put("lastAccessTime", uriStat.get("LastAccessTime"));
+
+                    // 请求时间统计
+                    stat.put("requestTimeMillis", uriStat.get("RequestTimeMillis"));
+                    stat.put("requestTimeMillisMax", uriStat.get("RequestTimeMillisMax"));
+                    stat.put("requestTimeMillisMaxOccurTime", uriStat.get("RequestTimeMillisMaxOccurTime"));
+
+                    // JDBC 执行统计
                     stat.put("jdbcExecuteCount", uriStat.get("JdbcExecuteCount"));
                     stat.put("jdbcExecuteErrorCount", uriStat.get("JdbcExecuteErrorCount"));
                     stat.put("jdbcExecuteTimeMillis", uriStat.get("JdbcExecuteTimeMillis"));
+                    stat.put("jdbcExecutePeak", uriStat.get("JdbcExecutePeak"));
+
+                    // JDBC 提交回滚统计
+                    stat.put("jdbcCommitCount", uriStat.get("JdbcCommitCount"));
+                    stat.put("jdbcRollbackCount", uriStat.get("JdbcRollbackCount"));
+
+                    // JDBC 查询统计
+                    stat.put("jdbcFetchRowCount", uriStat.get("JdbcFetchRowCount"));
+                    stat.put("jdbcFetchRowPeak", uriStat.get("JdbcFetchRowPeak"));
+
+                    // JDBC 更新统计
+                    stat.put("jdbcUpdateCount", uriStat.get("JdbcUpdateCount"));
+                    stat.put("jdbcUpdatePeak", uriStat.get("JdbcUpdatePeak"));
+
+                    // JDBC 连接池统计
+                    stat.put("jdbcPoolConnectionOpenCount", uriStat.get("JdbcPoolConnectionOpenCount"));
+                    stat.put("jdbcPoolConnectionCloseCount", uriStat.get("JdbcPoolConnectionCloseCount"));
+
+                    // JDBC 结果集统计
+                    stat.put("jdbcResultSetOpenCount", uriStat.get("JdbcResultSetOpenCount"));
+                    stat.put("jdbcResultSetCloseCount", uriStat.get("JdbcResultSetCloseCount"));
+
+                    // 其他统计信息
+                    stat.put("histogram", uriStat.get("Histogram"));
+                    stat.put("profiles", uriStat.get("Profiles"));
+
                     urlStatsList.add(stat);
                 });
             }
@@ -164,5 +205,16 @@ public class DruidDataSourceProvider {
         if (url == null) return null;
         // 掩码密码参数
         return url.replaceAll("password=[^&]*", "password=***");
+    }
+
+    public Map<String, Object> getWallStats() {
+        if (dataSource instanceof DruidDataSource druid) {
+            return druid.getWallStatMap();
+        }
+        return Collections.emptyMap();
+    }
+
+    public List<Map<String, Object>> getSpringStats() {
+        return SpringStatManager.getInstance().getMethodStatData();
     }
 }

@@ -42,9 +42,9 @@ public class DruidMonitorController {
      * 获取连接池状态
      */
     @GetMapping("/pool-stats")
-    public Result<Map<String, Object>> getPoolStats() {
+    public Result<List<Map<String, Object>>> getPoolStats() {
         try {
-            Map<String, Object> stats = druidDataSourceProvider.getPoolStats();
+            List<Map<String, Object>> stats = druidDataSourceProvider.getPoolStats();
             return Result.success(stats);
         } catch (Exception e) {
             log.error("Failed to get Druid pool stats", e);
@@ -74,6 +74,39 @@ public class DruidMonitorController {
         } catch (Exception e) {
             log.error("Failed to get URI stats", e);
             return Result.error("获取 URI 统计失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/session-stats")
+    public Result<List<Map<String, Object>>> getSessionStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getWebSessionStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get session stats", e);
+            return Result.error("获取会话统计失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/wall-stats")
+    public Result<Map<String, Object>> getWallStats() {
+        try {
+            Map<String, Object> stats = druidDataSourceProvider.getWallStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get Wall stats", e);
+            return Result.error("获取 Wall 统计失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/spring-stats")
+    public Result<List<Map<String, Object>>> getSpringStats() {
+        try {
+            List<Map<String, Object>> stats = druidDataSourceProvider.getSpringStats();
+            return Result.success(stats);
+        } catch (Exception e) {
+            log.error("Failed to get Spring Druid stats", e);
+            return Result.error("获取 Spring Druid 统计失败: " + e.getMessage());
         }
     }
 

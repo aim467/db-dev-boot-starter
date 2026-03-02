@@ -116,11 +116,20 @@
       </div>
     </el-card>
 
-    <TableDetail 
-      v-if="selectedTable" 
-      :table="selectedTable" 
-      @close="selectedTable = null" 
-    />
+    <!-- 表详情抽屉 -->
+    <el-drawer
+      v-model="drawerVisible"
+      :title="`表详情: ${drawerTable?.tableName || ''}`"
+      size="70%"
+      :destroy-on-close="true"
+      :close-on-click-modal="true">
+      <TableDetail 
+        v-if="drawerTable" 
+        :table="drawerTable" 
+        :in-drawer="true"
+        @close="drawerVisible = false" 
+      />
+    </el-drawer>
 
     <!-- 创建表弹窗 -->
     <el-dialog
@@ -277,6 +286,8 @@ const tables = ref([])
 const tableSearch = ref('')
 const loadingTables = ref(false)
 const selectedTable = ref(null)
+const drawerVisible = ref(false)
+const drawerTable = ref(null)
 
 const createDialogVisible = ref(false)
 const createFormRef = ref(null)
@@ -427,7 +438,8 @@ const viewTableDetail = async (tableName) => {
   })
   try {
     const res = await getTableDetail(tableName, selectedDataSource.value)
-    selectedTable.value = res.data
+    drawerTable.value = res.data
+    drawerVisible.value = true
     ElMessage.success('加载表详情成功')
   } catch (error) {
     ElMessage.error('加载表详情失败: ' + error.message)

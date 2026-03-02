@@ -1,5 +1,5 @@
 <template>
-  <div class="druid-monitor">
+  <div>
     <!-- 未启用 Druid 提示 -->
     <el-alert
       v-if="!druidEnabled && !loading"
@@ -24,7 +24,7 @@
           </template>
           
           <PoolStats
-            :pool-stats="poolStats"
+            :pool-stats-list="poolStatsList"
             :loading="poolLoading"
             @refresh="loadPoolStats"
           />
@@ -58,6 +58,48 @@
             :auto-refresh="activeTab === 'url'"
           />
         </el-tab-pane>
+
+        <el-tab-pane name="session">
+          <template #label>
+            <span>
+              <el-icon><User /></el-icon>
+              会话统计
+            </span>
+          </template>
+
+          <SessionStats
+            ref="sessionStatsRef"
+            :auto-refresh="activeTab === 'session'"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane name="wall">
+          <template #label>
+            <span>
+              <el-icon><Monitor /></el-icon>
+              Wall 防火墙
+            </span>
+          </template>
+
+          <WallStats
+            ref="wallStatsRef"
+            :auto-refresh="activeTab === 'wall'"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane name="spring">
+          <template #label>
+            <span>
+              <el-icon><SpringIcon /></el-icon>
+              Spring 监控
+            </span>
+          </template>
+
+          <SpringStats
+            ref="springStatsRef"
+            :auto-refresh="activeTab === 'spring'"
+          />
+        </el-tab-pane>
       </el-tabs>
     </template>
 
@@ -70,19 +112,47 @@
 </template>
 
 <script setup>
-import {onMounted, onUnmounted, ref, watch} from 'vue'
+import {h, onMounted, onUnmounted, ref, watch} from 'vue'
 import {checkDruidEnabled, getPoolStats} from '@/api/druid'
 import PoolStats from '@/components/PoolStats.vue'
 import SqlStats from '@/components/SqlStats.vue'
 import UrlStats from '@/components/UrlStats.vue'
+import SessionStats from '@/components/SessionStats.vue'
+import WallStats from '@/components/WallStats.vue'
+import SpringStats from '@/components/SpringStats.vue'
+
+// 自定义 Spring 图标组件
+const SpringIcon = {
+  render() {
+    return h('svg', {
+      xmlns: 'http://www.w3.org/2000/svg',
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': '2',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      width: '1em',
+      height: '1em'
+    }, [
+      h('path', { d: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z' }),
+      h('path', { d: 'M12 6v12' }),
+      h('path', { d: 'M8 10l4-4 4 4' })
+    ])
+  }
+}
 
 const loading = ref(true)
 const druidEnabled = ref(false)
 const activeTab = ref('pool')
-const poolStats = ref(null)
+const poolStatsList = ref([])
 const poolLoading = ref(false)
 const sqlStatsRef = ref(null)
 const urlStatsRef = ref(null)
+const sessionStatsRef = ref(null)
+const wallStatsRef = ref(null)
+const springStatsRef = ref(null)
+
 
 let poolRefreshTimer = null
 
@@ -107,9 +177,10 @@ const loadPoolStats = async () => {
   poolLoading.value = true
   try {
     const res = await getPoolStats()
-    poolStats.value = res.data
+    poolStatsList.value = res.data || []
   } catch (error) {
     console.error('Failed to load pool stats:', error)
+    poolStatsList.value = []
   } finally {
     poolLoading.value = false
   }
@@ -139,6 +210,15 @@ watch(activeTab, (newTab) => {
   if (newTab === 'url' && urlStatsRef.value) {
     urlStatsRef.value.refresh()
   }
+  if (newTab === 'session' && sessionStatsRef.value) {
+    sessionStatsRef.value.refresh()
+  }
+  if (newTab === 'wall' && wallStatsRef.value) {
+    wallStatsRef.value.refresh()
+  }
+  if (newTab === 'spring' && springStatsRef.value) {
+    springStatsRef.value.refresh()
+  }
 })
 
 onMounted(() => {
@@ -154,10 +234,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.druid-monitor {
-  padding: 10px;
-}
-
 .druid-tabs {
   min-height: calc(100vh - 100px);
   border-radius: 16px;

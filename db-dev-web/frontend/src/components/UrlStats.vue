@@ -89,6 +89,101 @@
             {{ formatNumber(row.jdbcExecuteTimeMillis) }}
           </template>
         </el-table-column>
+        <el-table-column prop="errorCount" label="错误次数" width="120" sortable>
+          <template #default="{ row }">
+            <span :class="{ 'error-text': row.errorCount > 0 }">
+              {{ formatNumber(row.errorCount) }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="lastAccessTime" label="最后访问时间" width="200" sortable>
+          <template #default="{ row }">
+            {{ formatDate(row.lastAccessTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="requestTimeMillisMax" label="最大请求耗时(ms)" width="160" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.requestTimeMillisMax) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="requestTimeMillisMaxOccurTime" label="最大耗时发生时间" width="200" sortable>
+          <template #default="{ row }">
+            {{ formatDate(row.requestTimeMillisMaxOccurTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcExecutePeak" label="SQL执行峰值" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcExecutePeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcCommitCount" label="SQL提交次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcCommitCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcRollbackCount" label="SQL回滚次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcRollbackCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcFetchRowCount" label="SQL获取行数" width="160" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcFetchRowCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcFetchRowPeak" label="SQL获取行数峰值" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcFetchRowPeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcUpdateCount" label="SQL更新次数" width="140" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcUpdateCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcUpdatePeak" label="SQL更新次数峰值" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcUpdatePeak) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcPoolConnectionOpenCount" label="连接池打开次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcPoolConnectionOpenCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcPoolConnectionCloseCount" label="连接池关闭次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcPoolConnectionCloseCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcResultSetOpenCount" label="结果集打开次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcResultSetOpenCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="jdbcResultSetCloseCount" label="结果集关闭次数" width="180" sortable>
+          <template #default="{ row }">
+            {{ formatNumber(row.jdbcResultSetCloseCount) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="histogram" label="请求耗时分布" width="120">
+          <template #default="{ row }">
+            <el-tooltip
+              :content="`<1ms: ${row.histogram?.[0] || 0} | 1-10ms: ${row.histogram?.[1] || 0} | 10-100ms: ${row.histogram?.[2] || 0} | 100ms-1s: ${row.histogram?.[3] || 0} | 1-10s: ${row.histogram?.[4] || 0} | 10-100s: ${row.histogram?.[5] || 0} | >100s: ${row.histogram?.[6] || 0} | 错误: ${row.histogram?.[7] || 0}`"
+              placement="left"
+              raw-content
+            >
+              <div class="histogram-bar">
+                <div
+                  v-for="(count, index) in (row.histogram || [0, 0, 0, 0, 0, 0, 0, 0])"
+                  :key="index"
+                  :class="['histogram-item', `histogram-${index}`]"
+                  :style="{ height: getHistogramHeight(count, row.requestCount) }"
+                />
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div v-if="filteredUrlStats.length === 0 && !loading" class="empty-tip">
@@ -172,6 +267,25 @@ const handleSortChange = ({prop, order}) => {
 const formatNumber = (num) => {
   if (num === undefined || num === null) return '0'
   return num.toLocaleString()
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-CN', { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit', 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  })
+}
+
+const getHistogramHeight = (count, total) => {
+  if (!total || total === 0) return '0%'
+  const percentage = (count / total) * 100
+  return Math.max(percentage, 5) + '%'
 }
 
 onMounted(() => {
@@ -263,6 +377,38 @@ defineExpose({
 
 .empty-tip {
   padding: 40px;
+}
+
+.histogram-bar {
+  display: flex;
+  align-items: flex-end;
+  height: 40px;
+  gap: 2px;
+  padding: 4px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.histogram-item {
+  flex: 1;
+  min-width: 4px;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.3s;
+}
+
+.histogram-0 { background: #67c23a; }
+.histogram-1 { background: #67c23a; }
+.histogram-2 { background: #409eff; }
+.histogram-3 { background: #409eff; }
+.histogram-4 { background: #e6a23c; }
+.histogram-5 { background: #e6a23c; }
+.histogram-6 { background: #f56c6c; }
+.histogram-7 { background: #909399; }
+
+.histogram-item:hover {
+  opacity: 0.8;
+  transform: scaleY(1.1);
 }
 
 @media (max-width: 768px) {

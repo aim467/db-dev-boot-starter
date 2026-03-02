@@ -26,6 +26,27 @@ export function getUrlStats() {
 }
 
 /**
+ * 获取会话统计信息
+ */
+export function getSessionStats() {
+  return request.get('/druid/session-stats')
+}
+
+/**
+ * 获取 Wall 防火墙统计信息
+ */
+export function getWallStats() {
+  return request.get('/druid/wall-stats')
+}
+
+/**
+ * 获取 Spring Druid 统计信息
+ */
+export function getSpringStats() {
+  return request.get('/druid/spring-stats')
+}
+
+/**
  * 重置统计信息
  */
 export function resetStats() {
