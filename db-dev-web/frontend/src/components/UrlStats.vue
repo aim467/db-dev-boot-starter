@@ -166,6 +166,24 @@
             {{ formatNumber(row.jdbcResultSetCloseCount) }}
           </template>
         </el-table-column>
+        <el-table-column prop="histogram" label="请求耗时分布" width="120">
+          <template #default="{ row }">
+            <el-tooltip
+              :content="`<1ms: ${row.histogram?.[0] || 0} | 1-10ms: ${row.histogram?.[1] || 0} | 10-100ms: ${row.histogram?.[2] || 0} | 100ms-1s: ${row.histogram?.[3] || 0} | 1-10s: ${row.histogram?.[4] || 0} | 10-100s: ${row.histogram?.[5] || 0} | >100s: ${row.histogram?.[6] || 0} | 错误: ${row.histogram?.[7] || 0}`"
+              placement="left"
+              raw-content
+            >
+              <div class="histogram-bar">
+                <div
+                  v-for="(count, index) in (row.histogram || [0, 0, 0, 0, 0, 0, 0, 0])"
+                  :key="index"
+                  :class="['histogram-item', `histogram-${index}`]"
+                  :style="{ height: getHistogramHeight(count, row.requestCount) }"
+                />
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
       </el-table>
 
       <div v-if="filteredUrlStats.length === 0 && !loading" class="empty-tip">
@@ -264,6 +282,12 @@ const formatDate = (dateStr) => {
   })
 }
 
+const getHistogramHeight = (count, total) => {
+  if (!total || total === 0) return '0%'
+  const percentage = (count / total) * 100
+  return Math.max(percentage, 5) + '%'
+}
+
 onMounted(() => {
   loadUrlStats()
   if (props.autoRefresh) {
@@ -353,6 +377,38 @@ defineExpose({
 
 .empty-tip {
   padding: 40px;
+}
+
+.histogram-bar {
+  display: flex;
+  align-items: flex-end;
+  height: 40px;
+  gap: 2px;
+  padding: 4px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.histogram-item {
+  flex: 1;
+  min-width: 4px;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.3s;
+}
+
+.histogram-0 { background: #67c23a; }
+.histogram-1 { background: #67c23a; }
+.histogram-2 { background: #409eff; }
+.histogram-3 { background: #409eff; }
+.histogram-4 { background: #e6a23c; }
+.histogram-5 { background: #e6a23c; }
+.histogram-6 { background: #f56c6c; }
+.histogram-7 { background: #909399; }
+
+.histogram-item:hover {
+  opacity: 0.8;
+  transform: scaleY(1.1);
 }
 
 @media (max-width: 768px) {

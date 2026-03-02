@@ -76,7 +76,7 @@
         <el-tab-pane name="wall">
           <template #label>
             <span>
-              <el-icon><Shield /></el-icon>
+              <el-icon><Monitor /></el-icon>
               Wall 防火墙
             </span>
           </template>
