@@ -281,4 +281,62 @@ onMounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
+
+/* 全局 el-drawer 样式统一 */
+:deep(.el-drawer) {
+  background: #fff;
+}
+
+:deep(.el-drawer__header) {
+  background: linear-gradient(135deg, #f8f9fc 0%, #f0f3f8 100%);
+  border-bottom: 1px solid #e4e7ed;
+  padding: 16px 20px;
+  margin-bottom: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+:deep(.el-drawer__header span) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:deep(.el-drawer__body) {
+  background: #fff;
+  padding: 20px;
+}
+
+:deep(.el-drawer__footer) {
+  background: #fafbfc;
+  border-top: 1px solid #e4e7ed;
+  padding: 16px 20px;
+}
+
+/* 深色模式适配 */
+:deep(.el-drawer.is-dark) {
+  background: #1a1f2e;
+}
+
+:deep(.el-drawer.is-dark .el-drawer__header) {
+  background: linear-gradient(135deg, #1e2433 0%, #141922 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  color: #e4e7ed;
+}
+
+:deep(.el-drawer.is-dark .el-drawer__body) {
+  background: #1a1f2e;
+  color: #e4e7ed;
+}
+
+:deep(.el-drawer.is-dark .el-drawer__footer) {
+  background: #141922;
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+:deep(.el-drawer__body) {
+  padding: 10px;
+}
 </style>
