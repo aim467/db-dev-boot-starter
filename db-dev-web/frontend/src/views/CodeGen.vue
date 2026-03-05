@@ -1,6 +1,5 @@
-<template>
+﻿<template>
   <div>
-    <!-- 配置卡片 -->
     <el-card shadow="hover" class="config-card">
       <template #header>
         <div class="card-header">
@@ -8,30 +7,29 @@
             <el-icon><Tools /></el-icon>
             <span class="header-title">代码生成器</span>
           </div>
-          <el-tag type="success" size="small">v1.0</el-tag>
+          <el-tag type="success" size="small">v2.0</el-tag>
         </div>
       </template>
 
-      <el-form ref="formRef" :model="form" label-width="100px" :rules="rules">
-        <!-- 基础配置 -->
+      <el-form ref="formRef" :model="form" label-width="110px" :rules="rules">
         <div class="section-title">
           <el-icon><Setting /></el-icon>
           <span>基础配置</span>
         </div>
-        
-        <el-row :gutter="24">
+
+        <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="数据源" prop="dataSourceName">
-              <el-select 
-                v-model="form.dataSourceName" 
-                placeholder="请选择数据源" 
+              <el-select
+                v-model="form.dataSourceName"
+                placeholder="请选择数据源"
                 style="width: 100%"
                 @change="onDataSourceChange"
               >
-                <el-option 
-                  v-for="ds in dataSources" 
-                  :key="ds.name" 
-                  :label="ds.name" 
+                <el-option
+                  v-for="ds in dataSources"
+                  :key="ds.name"
+                  :label="ds.name"
                   :value="ds.name"
                 >
                   <div class="ds-option">
@@ -42,20 +40,21 @@
               </el-select>
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
             <el-form-item label="数据表" prop="tableName">
-              <el-select 
-                v-model="form.tableName" 
-                placeholder="请选择表" 
+              <el-select
+                v-model="form.tableName"
+                placeholder="请选择数据表"
                 style="width: 100%"
                 :disabled="!form.dataSourceName"
                 filterable
                 @change="onTableChange"
               >
-                <el-option 
-                  v-for="table in tables" 
-                  :key="table.tableName" 
-                  :label="table.tableName" 
+                <el-option
+                  v-for="table in tables"
+                  :key="table.tableName"
+                  :label="table.tableName"
                   :value="table.tableName"
                 >
                   <div class="table-option">
@@ -66,32 +65,52 @@
               </el-select>
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
-            <el-form-item label="生成类型" prop="generateTypes">
-              <el-select v-model="form.generateTypes" multiple collapse-tags collapse-tags-tooltip style="width: 100%" placeholder="默认全部">
-                <el-option label="Entity" value="ENTITY" />
-                <el-option label="Mapper" value="MAPPER" />
-                <el-option label="XML" value="XML" />
-                <el-option label="Repository" value="REPOSITORY" />
+            <el-form-item label="生成框架" prop="generationType">
+              <el-select v-model="form.generationType" style="width: 100%" @change="onFrameworkChange">
+                <el-option label="MyBatis" value="MYBATIS" />
+                <el-option label="MyBatis-Plus" value="MYBATIS_PLUS" />
+                <el-option label="JPA" value="JPA" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-row :gutter="24">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="生成组件" prop="components">
+              <el-select
+                v-model="form.components"
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                style="width: 100%"
+                placeholder="默认全部"
+              >
+                <el-option
+                  v-for="item in availableComponents"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+
           <el-col :span="8">
             <el-form-item label="基础包名" prop="basePackage">
               <el-input v-model="form.basePackage" placeholder="com.example.project" />
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
             <el-form-item label="作者" prop="author">
-              <el-input v-model="form.author" placeholder="作者名称" />
+              <el-input v-model="form.author" placeholder="作者名" />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <!-- 高级配置 -->
         <el-collapse v-model="activeCollapse" class="advanced-config">
           <el-collapse-item name="advanced">
             <template #title>
@@ -100,41 +119,81 @@
                 <span>高级配置</span>
               </div>
             </template>
-            
-            <el-row :gutter="24" style="margin-top: 16px">
-              <el-col :span="20">
-                <div class="checkbox-group">
-                  <el-form-item label="Entity 配置">
+
+            <el-row :gutter="20" style="margin-top: 14px">
+              <el-col :span="24">
+                <el-form-item label="通用">
                   <el-checkbox v-model="form.overwrite">覆盖已存在文件</el-checkbox>
                   <el-checkbox v-model="form.entity.useLombok">使用 Lombok</el-checkbox>
-                  <el-checkbox v-model="form.entity.useJpa">使用 JPA 注解</el-checkbox>
                   <el-checkbox v-model="form.entity.useSwagger">使用 Swagger 注解</el-checkbox>
-                  </el-form-item>
-                </div>
+                </el-form-item>
               </el-col>
             </el-row>
 
-            <el-row :gutter="24" style="margin-top: 16px">
+            <el-row :gutter="20" style="margin-top: 10px">
               <el-col :span="8">
                 <el-form-item label="Entity 父类">
                   <el-input v-model="form.entity.superClass" placeholder="可选，如 BaseEntity" />
                 </el-form-item>
               </el-col>
-              <el-col :span="8">
-                <el-form-item label="Mapper后缀">
+
+              <el-col :span="8" v-if="form.generationType !== 'JPA' && form.components.includes('MAPPER')">
+                <el-form-item label="Mapper 后缀">
                   <el-input v-model="form.mapper.suffix" placeholder="Mapper" />
                 </el-form-item>
               </el-col>
-              <el-col :span="8">
-                <el-form-item label="XML目录">
+
+              <el-col :span="8" v-if="form.generationType !== 'JPA' && form.components.includes('XML')">
+                <el-form-item label="XML 目录">
                   <el-input v-model="form.xml.directory" placeholder="mapper" />
+                </el-form-item>
+              </el-col>
+
+              <el-col :span="8" v-if="form.generationType === 'JPA' && form.components.includes('REPOSITORY')">
+                <el-form-item label="Repository 后缀">
+                  <el-input v-model="form.repository.suffix" placeholder="Repository" />
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20" style="margin-top: 10px" v-if="form.generationType !== 'JPA' && form.components.includes('SERVICE')">
+              <el-col :span="8">
+                <el-form-item label="Service 接口后缀">
+                  <el-input v-model="form.service.interfaceSuffix" placeholder="Service" />
+                </el-form-item>
+              </el-col>
+
+              <el-col :span="8">
+                <el-form-item label="Service 实现后缀">
+                  <el-input v-model="form.service.implSuffix" placeholder="ServiceImpl" />
+                </el-form-item>
+              </el-col>
+
+              <el-col :span="8">
+                <el-form-item label="Service 生成策略">
+                  <el-radio-group v-model="form.service.generateInterface">
+                    <el-radio :value="true">接口 + 实现</el-radio>
+                    <el-radio :value="false">仅实现类</el-radio>
+                  </el-radio-group>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-row :gutter="20" style="margin-top: 10px" v-if="form.components.includes('CONTROLLER')">
+              <el-col :span="8">
+                <el-form-item label="Controller 后缀">
+                  <el-input v-model="form.controller.suffix" placeholder="Controller" />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="请求前缀">
+                  <el-input v-model="form.controller.basePath" placeholder="默认按表名推导" />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-collapse-item>
         </el-collapse>
 
-        <!-- 操作按钮 -->
         <div class="action-buttons">
           <el-button @click="resetForm">
             <el-icon><Refresh /></el-icon>
@@ -152,7 +211,6 @@
       </el-form>
     </el-card>
 
-    <!-- 表结构预览 -->
     <el-card v-if="tableColumns.length > 0" shadow="hover" class="table-preview-card">
       <template #header>
         <div class="card-header">
@@ -164,32 +222,17 @@
           <span class="column-count">共 {{ tableColumns.length }} 个字段</span>
         </div>
       </template>
-      
+
       <el-table :data="tableColumns" stripe size="small" max-height="300">
-        <el-table-column prop="columnName" label="字段名" width="150" />
-        <el-table-column prop="dataType" label="类型" width="120">
-          <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.dataType }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="javaType" label="Java类型" width="120" />
-        <el-table-column prop="nullable" label="可空" width="80" align="center">
-          <template #default="{ row }">
-            <el-icon :color="row.nullable ? '#67c23a' : '#f56c6c'">
-              <component :is="row.nullable ? 'Check' : 'Close'" />
-            </el-icon>
-          </template>
-        </el-table-column>
-        <el-table-column prop="primaryKey" label="主键" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag v-if="row.primaryKey" size="small" type="warning">PK</el-tag>
-          </template>
-        </el-table-column>
+        <el-table-column prop="columnName" label="字段名" width="160" />
+        <el-table-column prop="dataType" label="类型" width="120" />
+        <el-table-column prop="javaType" label="Java类型" width="140" />
+        <el-table-column prop="nullable" label="可空" width="80" align="center" />
+        <el-table-column prop="primaryKey" label="主键" width="80" align="center" />
         <el-table-column prop="remarks" label="备注" show-overflow-tooltip />
       </el-table>
     </el-card>
 
-    <!-- 代码预览 -->
     <el-card v-if="hasPreviewCode" shadow="hover" class="preview-card">
       <template #header>
         <div class="card-header">
@@ -197,32 +240,27 @@
             <el-icon><Document /></el-icon>
             <span class="header-title">代码预览</span>
           </div>
-          <el-button-group size="small">
-            <el-button @click="copyAllCode">
-              <el-icon><DocumentCopy /></el-icon>
-              复制全部
-            </el-button>
-          </el-button-group>
+          <el-button size="small" @click="copyAllCode">
+            <el-icon><DocumentCopy /></el-icon>
+            复制全部
+          </el-button>
         </div>
       </template>
 
       <el-tabs v-model="activeTab" type="border-card" class="code-tabs">
-        <el-tab-pane 
-          v-for="(code, type) in previewCode" 
-          :key="type" 
-          :label="getTabLabel(type)" 
+        <el-tab-pane
+          v-for="(code, type) in previewCode"
+          :key="type"
+          :label="getTabLabel(type)"
           :name="type"
         >
           <div class="code-wrapper">
             <div class="code-toolbar">
               <span class="file-type">{{ getFileExtension(type) }}</span>
-              <el-button size="small" text @click="copyCode(code)">
-                <el-icon><DocumentCopy /></el-icon>
-                复制
-              </el-button>
+              <el-button size="small" text @click="copyCode(code)">复制</el-button>
             </div>
             <div class="code-content">
-              <pre><code :class="getLanguageClass(type)">{{ code }}</code></pre>
+              <pre><code>{{ code }}</code></pre>
             </div>
           </div>
         </el-tab-pane>
@@ -232,11 +270,11 @@
 </template>
 
 <script setup>
-import {computed, reactive, ref} from 'vue'
-import {ElMessage} from 'element-plus'
-import {getDatasourceList} from '@/api/datasource'
-import {getTableDetail, getTableList} from '@/api/metadata'
-import {generate, preview} from '@/api/codegen'
+import { computed, reactive, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { getDatasourceList } from '@/api/datasource'
+import { getTableDetail, getTableList } from '@/api/metadata'
+import { generate, preview } from '@/api/codegen'
 
 const formRef = ref()
 const dataSources = ref([])
@@ -247,19 +285,43 @@ const previewLoading = ref(false)
 const generateLoading = ref(false)
 const activeCollapse = ref([])
 const activeTab = ref('')
-const downloadUrl = ref('')
+
+const frameworkComponents = {
+  MYBATIS: [
+    { label: 'Entity', value: 'ENTITY' },
+    { label: 'Mapper', value: 'MAPPER' },
+    { label: 'XML', value: 'XML' },
+    { label: 'Service', value: 'SERVICE' },
+    { label: 'Controller', value: 'CONTROLLER' }
+  ],
+  MYBATIS_PLUS: [
+    { label: 'Entity', value: 'ENTITY' },
+    { label: 'Mapper', value: 'MAPPER' },
+    { label: 'XML', value: 'XML' },
+    { label: 'Service', value: 'SERVICE' },
+    { label: 'Controller', value: 'CONTROLLER' }
+  ],
+  JPA: [
+    { label: 'Entity', value: 'ENTITY' },
+    { label: 'Repository', value: 'REPOSITORY' },
+    { label: 'Controller', value: 'CONTROLLER' }
+  ]
+}
+
+const defaultComponents = (framework) => frameworkComponents[framework]?.map(item => item.value) || []
 
 const form = reactive({
   dataSourceName: '',
   tableName: '',
   basePackage: 'com.example.project',
   author: 'DB Dev',
-  generateTypes: [],
+  generationType: 'MYBATIS',
+  components: defaultComponents('MYBATIS'),
   overwrite: true,
   entity: {
     useLombok: true,
-    useJpa: false,
     useSwagger: false,
+    useJpa: false,
     superClass: ''
   },
   mapper: {
@@ -270,27 +332,36 @@ const form = reactive({
     directory: 'mapper'
   },
   repository: {
-    suffix: 'Repository',
-    useJpa: true
+    suffix: 'Repository'
+  },
+  service: {
+    interfaceSuffix: 'Service',
+    implSuffix: 'ServiceImpl',
+    generateInterface: true
+  },
+  controller: {
+    suffix: 'Controller',
+    basePath: ''
   }
 })
 
 const rules = {
   dataSourceName: [{ required: true, message: '请选择数据源', trigger: 'change' }],
-  tableName: [{ required: true, message: '请选择表', trigger: 'change' }],
+  tableName: [{ required: true, message: '请选择数据表', trigger: 'change' }],
+  generationType: [{ required: true, message: '请选择生成框架', trigger: 'change' }],
+  components: [{ required: true, message: '请至少选择一个生成组件', trigger: 'change' }],
   basePackage: [{ required: true, message: '请输入基础包名', trigger: 'blur' }],
-  author: [{ required: true, message: '请输入作者名称', trigger: 'blur' }]
+  author: [{ required: true, message: '请输入作者', trigger: 'blur' }]
 }
 
+const availableComponents = computed(() => frameworkComponents[form.generationType] || [])
 const hasPreviewCode = computed(() => Object.keys(previewCode.value).length > 0)
 
-// 获取数据库类型标签样式
 const getDbType = (type) => {
   const types = { mysql: 'success', postgresql: 'primary', oracle: 'warning', sqlserver: '' }
   return types[type?.toLowerCase()] || 'info'
 }
 
-// 获取Tab标签
 const getTabLabel = (type) => {
   const labels = {
     entity: 'Entity',
@@ -298,75 +369,86 @@ const getTabLabel = (type) => {
     xml: 'XML',
     repository: 'Repository',
     service: 'Service',
+    serviceimpl: 'ServiceImpl',
     controller: 'Controller'
   }
   return labels[type?.toLowerCase()] || type
 }
 
-// 获取文件扩展名
-const getFileExtension = (type) => {
-  const ext = type?.toLowerCase()
-  if (ext === 'xml') return '.xml'
-  return '.java'
+const getFileExtension = (type) => type?.toLowerCase() === 'xml' ? '.xml' : '.java'
+
+const onFrameworkChange = (framework) => {
+  const allowed = new Set(defaultComponents(framework))
+  form.components = form.components.filter(item => allowed.has(item))
+  if (form.components.length === 0) {
+    form.components = defaultComponents(framework)
+  }
 }
 
-// 获取语法高亮类
-const getLanguageClass = (type) => {
-  return type?.toLowerCase() === 'xml' ? 'language-xml' : 'language-java'
-}
+watch(
+  () => form.generationType,
+  (framework) => {
+    form.entity.useJpa = framework === 'JPA'
+    if (framework === 'JPA') {
+      form.service.generateInterface = true
+    }
+  },
+  { immediate: true }
+)
 
-// 加载数据源列表
 const loadDataSources = async () => {
   try {
     const res = await getDatasourceList()
     dataSources.value = res.data || []
   } catch (error) {
-    console.error('加载数据源失败:', error)
+    console.error('加载数据源失败', error)
   }
 }
 
-// 数据源变化
 const onDataSourceChange = async (val) => {
   form.tableName = ''
   tableColumns.value = []
   previewCode.value = {}
-  if (val) {
-    try {
-      const res = await getTableList(val)
-      tables.value = res.data || []
-    } catch (error) {
-      console.error('加载表列表失败:', error)
-      tables.value = []
-    }
+  if (!val) {
+    tables.value = []
+    return
+  }
+  try {
+    const res = await getTableList(val)
+    tables.value = res.data || []
+  } catch (error) {
+    console.error('加载表列表失败', error)
+    tables.value = []
   }
 }
 
-// 表变化，加载表结构
 const onTableChange = async (val) => {
   previewCode.value = {}
-  if (val && form.dataSourceName) {
-    try {
-      const res = await getTableDetail(val, form.dataSourceName)
-      tableColumns.value = res.data?.columns || []
-    } catch (error) {
-      console.error('加载表结构失败:', error)
-      tableColumns.value = []
-    }
+  if (!val || !form.dataSourceName) {
+    tableColumns.value = []
+    return
+  }
+  try {
+    const res = await getTableDetail(val, form.dataSourceName)
+    tableColumns.value = res.data?.columns || []
+  } catch (error) {
+    console.error('加载表结构失败', error)
+    tableColumns.value = []
   }
 }
 
-// 预览代码
+const buildRequestConfig = () => ({ ...form, components: form.components })
+
 const handlePreview = async () => {
   try {
     await formRef.value.validate()
     previewLoading.value = true
 
-    const config = { ...form, outputDir: null }
+    const config = { ...buildRequestConfig(), outputDir: null }
     const res = await preview(config)
-    
     if (res.code === 200) {
-      previewCode.value = res.data
-      activeTab.value = Object.keys(res.data)[0] || ''
+      previewCode.value = res.data || {}
+      activeTab.value = Object.keys(previewCode.value)[0] || ''
       ElMessage.success('代码预览成功')
     } else {
       ElMessage.error(res.message || '预览失败')
@@ -379,21 +461,17 @@ const handlePreview = async () => {
   }
 }
 
-// 生成代码并下载
 const handleGenerate = async () => {
   try {
     await formRef.value.validate()
-
     generateLoading.value = true
-    const res = await generate(form)
-    
+
+    const res = await generate(buildRequestConfig())
     if (res.code === 200) {
-      ElMessage.success('代码生成成功，正在下载...')
-      previewCode.value = res.data.files
-      activeTab.value = Object.keys(res.data.files)[0] || ''
-      downloadUrl.value = res.data.downloadUrl
-      
-      // 自动触发下载
+      previewCode.value = res.data?.files || {}
+      activeTab.value = Object.keys(previewCode.value)[0] || ''
+      ElMessage.success('代码生成成功，开始下载')
+
       const link = document.createElement('a')
       link.href = res.data.downloadUrl
       link.download = res.data.fileName
@@ -411,7 +489,6 @@ const handleGenerate = async () => {
   }
 }
 
-// 复制代码
 const copyCode = async (code) => {
   try {
     await navigator.clipboard.writeText(code)
@@ -421,37 +498,38 @@ const copyCode = async (code) => {
   }
 }
 
-// 复制全部代码
 const copyAllCode = async () => {
   const allCode = Object.entries(previewCode.value)
-    .map(([type, code]) => `// ========== ${type.toUpperCase()} ==========\n${code}`)
+    .map(([type, code]) => `// ===== ${type.toUpperCase()} =====\n${code}`)
     .join('\n\n')
   await copyCode(allCode)
 }
 
-// 重置表单
 const resetForm = () => {
   formRef.value?.resetFields()
+  form.generationType = 'MYBATIS'
+  form.components = defaultComponents('MYBATIS')
+  form.overwrite = true
+  form.entity.useLombok = true
+  form.entity.useSwagger = false
+  form.entity.superClass = ''
+  form.mapper.suffix = 'Mapper'
+  form.xml.directory = 'mapper'
+  form.repository.suffix = 'Repository'
+  form.service.interfaceSuffix = 'Service'
+  form.service.implSuffix = 'ServiceImpl'
+  form.service.generateInterface = true
+  form.controller.suffix = 'Controller'
+  form.controller.basePath = ''
+
   previewCode.value = {}
   tableColumns.value = []
-  downloadUrl.value = ''
-  form.entity.useLombok = true
-  form.entity.useJpa = false
-  form.entity.useSwagger = false
-  form.overwrite = false
 }
 
-// 初始化
 loadDataSources()
 </script>
 
 <style scoped>
-
-.config-card {
-  border-radius: 10px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
 .config-card,
 .table-preview-card,
 .preview-card {
@@ -504,15 +582,6 @@ loadDataSources()
   text-overflow: ellipsis;
 }
 
-.input-icon {
-  cursor: pointer;
-  color: #909399;
-}
-
-.input-icon:hover {
-  color: #409eff;
-}
-
 .advanced-config {
   margin: 20px 0;
   border: none;
@@ -531,19 +600,12 @@ loadDataSources()
   color: #606266;
 }
 
-.checkbox-group {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
 .action-buttons {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin-top: 24px;
   padding-top: 20px;
-  /* border-top: 1px solid #ebeef5; */
 }
 
 .column-count {
@@ -585,14 +647,6 @@ loadDataSources()
   font-family: monospace;
 }
 
-.code-toolbar .el-button {
-  color: #cccccc;
-}
-
-.code-toolbar .el-button:hover {
-  color: #ffffff;
-}
-
 .code-content {
   max-height: 500px;
   overflow: auto;
@@ -609,33 +663,5 @@ loadDataSources()
 .code-content code {
   color: #d4d4d4;
   white-space: pre;
-}
-
-/* 简单的语法高亮 */
-.code-content code.language-java {
-  color: #9cdcfe;
-}
-
-.code-content code.language-xml {
-  color: #ce9178;
-}
-
-/* 滚动条样式 */
-.code-content::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.code-content::-webkit-scrollbar-track {
-  background: #1e1e1e;
-}
-
-.code-content::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 4px;
-}
-
-.code-content::-webkit-scrollbar-thumb:hover {
-  background: #4f4f4f;
 }
 </style>

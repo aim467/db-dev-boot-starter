@@ -37,7 +37,7 @@
             <span style="font-weight: 600;">表列表</span>
             <el-tag v-if="tables.length > 0" type="info" size="small">{{ tables.length }}</el-tag>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 10px;">
             <el-input
               v-model="tableSearch"
               placeholder="搜索表名"
@@ -51,7 +51,7 @@
               <el-icon><Plus /></el-icon>
               新建表
             </el-button>
-            <el-button type="primary" size="small" @click="loadTables" :loading="loadingTables">
+            <el-button type="primary" size="small" style="margin-left: 0" @click="loadTables" :loading="loadingTables">
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
